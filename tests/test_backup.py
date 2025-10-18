@@ -736,8 +736,8 @@ class TestBackupErrorPaths:
         assert result["error_type"] == "io_error"
         assert "unexpected" in result["error"].lower()
 
-    def test_restore_backup_cleanup_failure(self, tmp_path, monkeypatch):
-        """Test restore when backup cleanup fails."""
+    def test_restore_backup_temp_cleanup_failure(self, tmp_path, monkeypatch):
+        """Test restore when temp file cleanup fails (best effort)."""
         original = tmp_path / "test.txt"
         original.write_text("original\n")
 
@@ -747,21 +747,24 @@ class TestBackupErrorPaths:
         # Modify original
         original.write_text("modified\n")
 
-        # Mock Path.unlink to raise exception (cleanup failure)
+        # Mock Path.unlink to raise exception only for temp files
         from pathlib import Path
 
         original_unlink = Path.unlink
+        unlink_calls = []
 
         def mock_unlink(self, *args, **kwargs):
-            if "backup" in str(self):
-                raise OSError("Cannot delete backup")
+            unlink_calls.append(str(self))
+            # Only fail for temp files (contain .tmp.)
+            if ".tmp." in str(self):
+                raise OSError("Cannot delete temp file")
             return original_unlink(self, *args, **kwargs)
 
         monkeypatch.setattr(Path, "unlink", mock_unlink)
 
         result = restore_backup(backup_result["backup_file"])
 
-        # Should succeed despite cleanup failure
+        # Should succeed despite temp file cleanup failure (best effort)
         assert result["success"] is True
         assert "restored" in result["message"].lower()
         # Verify content was restored
