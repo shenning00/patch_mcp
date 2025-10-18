@@ -684,8 +684,6 @@ class TestBackupErrorPaths:
         # Mock shutil.copy2 to raise OSError with disk full message
         import shutil
 
-        original_copy2 = shutil.copy2
-
         def mock_copy2(src, dst):
             raise OSError("No space left on device")
 

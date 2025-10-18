@@ -676,10 +676,6 @@ class TestWorkflowsErrorPaths:
 
         # Now manually delete the backup and test restore failure
         # This simulates a restore failure scenario
-        import os
-
-        backup_path = backup_result["backup_file"]
-
         # Apply a bad patch which will trigger restore
         bad_patch = """--- test.txt
 +++ test.txt
