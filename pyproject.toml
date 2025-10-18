@@ -20,15 +20,16 @@ classifiers = [
     "Topic :: Software Development :: Libraries",
 ]
 
-[project.urls]
-Homepage = "https://github.com/shenning00/patch_mcp"
-Repository = "https://github.com/shenning00/patch_mcp"
-Issues = "https://github.com/shenning00/patch_mcp/issues"
 dependencies = [
     "patch-ng>=1.19.0",
     "pydantic>=2.0.0",
     "mcp>=0.1.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/shenning00/patch_mcp"
+Repository = "https://github.com/shenning00/patch_mcp"
+Issues = "https://github.com/shenning00/patch_mcp/issues"
 
 [project.scripts]
 patch-mcp = "patch_mcp.server:main"
