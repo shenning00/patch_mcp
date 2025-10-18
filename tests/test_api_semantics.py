@@ -7,14 +7,11 @@ This test file verifies the CRITICAL API semantics as specified in the design:
 4. All tools use correct return formats
 """
 
-import pytest
-from pathlib import Path
-
+from patch_mcp.tools.apply import apply_patch
 from patch_mcp.tools.generate import generate_patch
 from patch_mcp.tools.inspect import inspect_patch
-from patch_mcp.tools.validate import validate_patch
-from patch_mcp.tools.apply import apply_patch
 from patch_mcp.tools.revert import revert_patch
+from patch_mcp.tools.validate import validate_patch
 
 
 class TestCriticalAPISemantics:

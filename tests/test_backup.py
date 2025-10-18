@@ -12,8 +12,6 @@ import re
 import time
 from pathlib import Path
 
-import pytest
-
 from patch_mcp.tools.backup import backup_file, parse_backup_filename, restore_backup
 
 

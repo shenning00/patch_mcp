@@ -8,8 +8,6 @@ Tests the patch inspection functionality including:
 - Summary totals
 """
 
-import pytest
-
 from patch_mcp.tools.inspect import inspect_patch
 
 

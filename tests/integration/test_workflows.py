@@ -7,15 +7,14 @@ This module tests all 4 error recovery patterns implemented in workflows.py:
 4. Progressive Validation: Step-by-step with detailed reporting
 """
 
-import pytest
 from pathlib import Path
+
 from patch_mcp.workflows import (
-    apply_patches_with_revert,
+    apply_patch_progressive,
     apply_patch_with_backup,
     apply_patches_atomic,
-    apply_patch_progressive,
+    apply_patches_with_revert,
 )
-
 
 # ============================================================================
 # Pattern 1: Try-Revert (Sequential Patches)
@@ -424,8 +423,6 @@ class TestApplyPatchesAtomic:
 
         # For this test, we need a real apply failure scenario
         # Let's use a simpler approach: make file2 readonly after validation
-        import os
-        import stat
 
         # First, let's just test the rollback mechanism
         # by using a bad patch that somehow passes validation

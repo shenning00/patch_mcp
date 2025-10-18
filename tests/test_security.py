@@ -4,10 +4,7 @@ This module provides comprehensive tests for all security functions.
 Target: 100% code coverage (security-critical component).
 """
 
-import os
 import shutil
-import tempfile
-from pathlib import Path
 
 import pytest
 
@@ -220,68 +217,29 @@ class TestValidateFileSafety:
 
         # Mock disk_usage to return space above minimum but below safety margin
         file_size = test_file.stat().st_size
-        safety_margin = int(file_size * 1.1)
+        int(file_size * 1.1)
 
         # We need to ensure the mocked free space is:
         # 1. Above MIN_FREE_SPACE (100MB)
         # 2. Below safety_margin (1.1MB which is way less than MIN_FREE_SPACE)
-        # Since MIN_FREE_SPACE >> safety_margin, we set free space to just below MIN_FREE_SPACE
+        # Since MIN_FREE_SPACE >> safety_margin, we need to adjust the test
+        # Better approach: mock the constants themselves for this test
+        import patch_mcp.utils
 
-        class MockUsage:
-            def __init__(self):
-                # Set free space just above minimum but we'll fail on second check
-                # Actually, since safety_margin is so small, let's use a different approach
-                # Set to MIN_FREE_SPACE + 1MB, which is above MIN but below what we need
-                # if the file was larger
-                # Better: Set to be between MIN_FREE_SPACE and a larger safety margin
-                # We need a scenario where: MIN_FREE_SPACE < free < safety_margin
-                # But safety_margin for 1MB file is only 1.1MB, less than MIN_FREE_SPACE
-                # Let's instead use a larger file...
-                # Actually, let's make the file size calculation work differently
-                # Use MAX_FILE_SIZE - 1MB to get close to limit but not exceed
-                self.free = MIN_FREE_SPACE + 1  # Above minimum
-
-        def mock_disk_usage(path):
-            return MockUsage()
+        # Temporarily make MIN_FREE_SPACE smaller
+        monkeypatch.setattr(patch_mcp.utils, "MIN_FREE_SPACE", 1024 * 1024)  # 1MB
 
         # Re-create with a much larger file that's still under MAX_FILE_SIZE
         test_file.write_bytes(b"x" * (MAX_FILE_SIZE - 1024 * 1024))  # 9MB (under 10MB limit)
-
-        file_size = test_file.stat().st_size
-        safety_margin = int(file_size * 1.1)  # About 9.9MB
-
-        # Now safety_margin is large enough. Set free space between MIN and safety_margin
-        # MIN_FREE_SPACE = 100MB, safety_margin = ~9.9MB
-        # Wait, that still doesn't work because MIN > safety_margin
-        #
-        # The issue is that MIN_FREE_SPACE (100MB) will always be checked first
-        # and if we have >= 100MB, the safety margin check won't fail because
-        # safety margin for files under 10MB is < 100MB
-        #
-        # We need to make MIN_FREE_SPACE the smaller constraint by making file bigger
-        # But we can't exceed MAX_FILE_SIZE...
-        #
-        # Let's rethink: we want free < safety_margin but free >= MIN_FREE_SPACE
-        # This means: MIN_FREE_SPACE <= free < file_size * 1.1
-        # So: MIN_FREE_SPACE < file_size * 1.1
-        # So: file_size > MIN_FREE_SPACE / 1.1 = 100MB / 1.1 = 90.9MB
-        # But MAX_FILE_SIZE is only 10MB!
-        #
-        # This is impossible with current constants. Let me mock MIN_FREE_SPACE too
-
-        # Better approach: mock the constants themselves for this test
-        original_min = MIN_FREE_SPACE
-
-        # Temporarily make MIN_FREE_SPACE smaller
-        import patch_mcp.utils
-
-        monkeypatch.setattr(patch_mcp.utils, "MIN_FREE_SPACE", 1024 * 1024)  # 1MB
 
         # Now with 9MB file, safety margin is 9.9MB
         # Set free space to 5MB (above 1MB min, below 9.9MB safety)
         class MockUsage:
             def __init__(self):
                 self.free = 5 * 1024 * 1024  # 5MB
+
+        def mock_disk_usage(path):
+            return MockUsage()
 
         monkeypatch.setattr(shutil, "disk_usage", mock_disk_usage)
 

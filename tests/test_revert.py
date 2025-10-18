@@ -7,9 +7,6 @@ Tests the patch reversion functionality including:
 - Edge cases
 """
 
-import pytest
-from pathlib import Path
-
 from patch_mcp.tools.apply import apply_patch
 from patch_mcp.tools.revert import revert_patch
 

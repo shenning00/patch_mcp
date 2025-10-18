@@ -10,9 +10,6 @@ Tests the patch generation functionality including:
 - File not found errors
 """
 
-import pytest
-from pathlib import Path
-
 from patch_mcp.tools.generate import generate_patch
 
 

@@ -8,9 +8,6 @@ Tests the patch validation functionality including:
 - Security checks
 """
 
-import pytest
-from pathlib import Path
-
 from patch_mcp.tools.validate import validate_patch
 
 

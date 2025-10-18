@@ -4,14 +4,9 @@ This module tests all 10 error types in realistic scenarios, demonstrating
 how the recovery patterns handle various failure modes gracefully.
 """
 
-import os
-import shutil
 import stat
 from pathlib import Path
 
-import pytest
-
-from patch_mcp.models import ErrorType
 from patch_mcp.recovery import (
     batch_apply_patches,
     safe_apply_with_backup,
@@ -620,6 +615,7 @@ class TestEndToEndWorkflows:
     def test_backup_restore_multiple_versions(self, tmp_path):
         """Manage multiple backup versions."""
         import time
+
         from patch_mcp.tools.backup import backup_file
 
         target = tmp_path / "versions.py"

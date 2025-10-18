@@ -9,13 +9,11 @@ lines 2023-2149:
 5. Generate and Distribute Patch
 """
 
-import pytest
-from pathlib import Path
 from patch_mcp.tools.apply import apply_patch
-from patch_mcp.tools.validate import validate_patch
 from patch_mcp.tools.backup import backup_file, restore_backup
 from patch_mcp.tools.generate import generate_patch
 from patch_mcp.tools.inspect import inspect_patch
+from patch_mcp.tools.validate import validate_patch
 from patch_mcp.workflows import apply_patches_atomic
 
 
@@ -45,7 +43,7 @@ class TestWorkflow1SafeSinglePatchApplication:
         # Step 2: Create backup
         backup = backup_file(str(config_file))
         assert backup["success"] is True
-        backup_path = backup["backup_file"]
+        backup["backup_file"]
 
         # Step 3: Apply patch
         result = apply_patch(str(config_file), patch)
@@ -323,7 +321,7 @@ class TestWorkflow4InspectAndApplyMultifilePatch:
         validation = validate_patch(str(config_file), config_patch)
         assert validation["can_apply"] is True
 
-        backup = backup_file(str(config_file))
+        backup_file(str(config_file))
         result = apply_patch(str(config_file), config_patch)
         assert result["success"] is True
 
@@ -331,7 +329,7 @@ class TestWorkflow4InspectAndApplyMultifilePatch:
         validation = validate_patch(str(utils_file), utils_patch)
         assert validation["can_apply"] is True
 
-        backup = backup_file(str(utils_file))
+        backup_file(str(utils_file))
         result = apply_patch(str(utils_file), utils_patch)
         assert result["success"] is True
 
@@ -399,7 +397,7 @@ class TestWorkflow5GenerateAndDistributePatch:
         assert validation["can_apply"] is True
 
         # Apply with backup
-        backup = backup_file(str(production_config))
+        backup_file(str(production_config))
         result = apply_patch(str(production_config), patch_content)
         assert result["success"] is True
 

@@ -9,9 +9,6 @@ Tests the patch application functionality including:
 - Security checks
 """
 
-import pytest
-from pathlib import Path
-
 from patch_mcp.tools.apply import apply_patch
 
 

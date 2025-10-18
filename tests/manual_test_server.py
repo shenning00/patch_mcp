@@ -185,7 +185,8 @@ async def test_server() -> None:
 
                 # Verify restoration
                 restored_content = test_file.read_text()
-                print(f"Content restored correctly: {restored_content == 'important content\n'}")
+                expected = "important content\n"
+                print(f"Content restored correctly: {restored_content == expected}")
 
             print("\n" + "=" * 60)
             print("ALL TESTS COMPLETED SUCCESSFULLY")
