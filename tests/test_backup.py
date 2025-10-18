@@ -221,8 +221,10 @@ class TestParseBackupFilename:
 
     def test_parse_filename_with_path(self):
         """Parse backup filename with directory path."""
-        result = parse_backup_filename("/path/to/file.py.backup.20250117_143052")
-        assert result == "/path/to/file.py"
+        backup_path = str(Path("/path/to/file.py.backup.20250117_143052"))
+        expected = str(Path("/path/to/file.py"))
+        result = parse_backup_filename(backup_path)
+        assert result == expected
 
     def test_parse_filename_with_dots(self):
         """Parse backup filename where original has dots."""
@@ -238,9 +240,11 @@ class TestParseBackupFilename:
 
     def test_parse_filename_preserves_relative_path(self):
         """Parse preserves relative path structure."""
-        result = parse_backup_filename("./subdir/file.txt.backup.20250117_143052")
+        backup_path = str(Path("./subdir/file.txt.backup.20250117_143052"))
+        expected = str(Path("subdir/file.txt"))
+        result = parse_backup_filename(backup_path)
         # Path normalization removes leading ./
-        assert result == "subdir/file.txt"
+        assert result == expected
 
 
 class TestRestoreBackup:

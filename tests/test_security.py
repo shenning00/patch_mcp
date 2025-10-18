@@ -5,6 +5,7 @@ Target: 100% code coverage (security-critical component).
 """
 
 import shutil
+import sys
 
 import pytest
 
@@ -73,6 +74,7 @@ class TestIsBinaryFile:
         text_file.write_text("Short text")
         assert is_binary_file(text_file, check_bytes=5) is False
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="Windows doesn't support chmod(0o000)")
     def test_unreadable_file_is_binary(self, tmp_path):
         """Test that unreadable files are treated as binary for safety."""
         unreadable_file = tmp_path / "unreadable.txt"
