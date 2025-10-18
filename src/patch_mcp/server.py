@@ -76,16 +76,15 @@ async def list_tools() -> list[Tool]:
                 "required": ["file_path", "patch"],
             },
         ),
-        ),
         Tool(
             name="revert_patch",
             description="Reverse a previously applied patch. For multi-hunk patches, atomically reverts all changes that were applied together.",
             inputSchema={
                 "type": "object",
                 "properties": {
+                    "file_path": {
                         "type": "string",
                         "description": "Path to the file to revert",
-                    },
                     },
                     "patch": {
                         "type": "string",
@@ -93,6 +92,7 @@ async def list_tools() -> list[Tool]:
                     },
                 },
                 "required": ["file_path", "patch"],
+            },
         ),
         Tool(
             name="generate_patch",
