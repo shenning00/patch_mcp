@@ -12,9 +12,8 @@ The four recovery patterns:
 """
 
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
-from .models import ErrorType
 from .tools.apply import apply_patch
 from .tools.backup import backup_file, restore_backup
 from .tools.inspect import inspect_patch
@@ -104,6 +103,7 @@ def safe_apply_with_backup(file_path: str, patch: str) -> Dict[str, Any]:
         # Step 4: Restore from backup on failure
         restore_result = restore_backup(backup_path)
         restored = restore_result["success"]
+        status = "restored" if restored else "FAILED TO RESTORE"
 
         return {
             "success": False,
@@ -111,7 +111,7 @@ def safe_apply_with_backup(file_path: str, patch: str) -> Dict[str, Any]:
             "applied": False,
             "backup_file": backup_path,
             "restored": restored,
-            "message": f"Apply failed and {'restored' if restored else 'FAILED TO RESTORE'} from backup",
+            "message": f"Apply failed and {status} from backup",
             "error": apply_result["error"],
             "error_type": apply_result.get("error_type"),
         }
@@ -128,9 +128,7 @@ def safe_apply_with_backup(file_path: str, patch: str) -> Dict[str, Any]:
     }
 
 
-def validate_before_apply(
-    file_path: str, patch: str, dry_run: bool = False
-) -> Dict[str, Any]:
+def validate_before_apply(file_path: str, patch: str, dry_run: bool = False) -> Dict[str, Any]:
     """Validate patch before attempting to apply.
 
     This function performs comprehensive validation before applying a patch.
@@ -186,13 +184,14 @@ def validate_before_apply(
     # Step 2: Validate can apply to file
     validation = validate_patch(file_path, patch)
     if not validation.get("can_apply", False):
+        error_msg = validation.get("reason", validation.get("error"))
         return {
             "success": False,
             "file_path": file_path,
             "validation": validation,
             "inspection": inspection,
             "applied": False,
-            "message": f"Patch cannot be applied: {validation.get('reason', validation.get('error'))}",
+            "message": f"Patch cannot be applied: {error_msg}",
             "error": validation.get("reason") or validation.get("error"),
             "error_type": validation.get("error_type"),
         }
@@ -353,6 +352,7 @@ def batch_apply_patches(patches: List[Tuple[str, str]]) -> Dict[str, Any]:
             except Exception:
                 pass
 
+        msg = f"Failed at patch {applied_count + 1}/{total_patches}, " "rolled back all changes"
         return {
             "success": False,
             "total_patches": total_patches,
@@ -361,7 +361,7 @@ def batch_apply_patches(patches: List[Tuple[str, str]]) -> Dict[str, Any]:
             "backups": list(backups.values()),
             "results": results,
             "rollback_performed": rollback_performed,
-            "message": f"Failed at patch {applied_count + 1}/{total_patches}, rolled back all changes",
+            "message": msg,
             "error": failure_error,
         }
 

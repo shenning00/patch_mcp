@@ -302,37 +302,23 @@ def _can_apply_patch(file_lines: list[str], hunks: list[Dict[str, Any]]) -> Dict
         return {"can_apply": True}
 
     for hunk in hunks:
-        # Build expected content from hunk (context + removed lines)
-        expected_lines = []
-        hunk_line = 0
-
-        # Interleave context and removed lines based on original positions
-        removed_iter = iter(hunk["removed_lines"])
-        context_iter = iter(hunk["context_lines"])
-
-        # We need to reconstruct the original file content that should match
-        # For simplicity, we'll use difflib to check if the patch can apply
-        # by simulating what the file should look like before the patch
-
         # Get the section of the file this hunk affects
         start_line = hunk["source_start"] - 1  # Convert to 0-indexed
         end_line = start_line + hunk["source_count"]
 
         if start_line < 0 or end_line > len(file_lines):
+            reason = (
+                f"Hunk refers to lines {hunk['source_start']}-{end_line} "
+                f"but file only has {len(file_lines)} lines"
+            )
             return {
                 "can_apply": False,
-                "reason": f"Hunk refers to lines {hunk['source_start']}-{end_line} but file only has {len(file_lines)} lines",
+                "reason": reason,
             }
 
         # Extract the actual lines from the file
         actual_lines = file_lines[start_line:end_line]
-
-        # Build what we expect from the patch (context + removed lines)
-        # This is a simplified check - a full implementation would need to
-        # match the exact structure, but checking line content is sufficient
-        expected_content = set(hunk["context_lines"] + hunk["removed_lines"])
         actual_content_clean = [line.rstrip("\n") for line in actual_lines]
-        actual_set = set(actual_content_clean)
 
         # Check if removed lines exist in the actual content
         for removed_line in hunk["removed_lines"]:
@@ -343,14 +329,22 @@ def _can_apply_patch(file_lines: list[str], hunks: list[Dict[str, Any]]) -> Dict
                     clean_removed, actual_content_clean, n=1, cutoff=0.6
                 )
                 if closest:
+                    reason = (
+                        f"Context mismatch at line {hunk['source_start']}: "
+                        f"expected '{clean_removed}' but found '{closest[0]}'"
+                    )
                     return {
                         "can_apply": False,
-                        "reason": f"Context mismatch at line {hunk['source_start']}: expected '{clean_removed}' but found '{closest[0]}'",
+                        "reason": reason,
                     }
                 else:
+                    reason = (
+                        f"Context mismatch: line '{clean_removed}' "
+                        "not found in file at expected position"
+                    )
                     return {
                         "can_apply": False,
-                        "reason": f"Context mismatch: line '{clean_removed}' not found in file at expected position",
+                        "reason": reason,
                     }
 
     return {"can_apply": True}

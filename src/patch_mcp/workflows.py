@@ -25,9 +25,7 @@ from .utils import validate_file_safety
 logger = logging.getLogger(__name__)
 
 
-def apply_patches_with_revert(
-    file_path: str, patches: List[str]
-) -> Dict[str, Any]:
+def apply_patches_with_revert(file_path: str, patches: List[str]) -> Dict[str, Any]:
     """Apply multiple patches sequentially, reverting all on first failure.
 
     This pattern applies patches one by one in order. If any patch fails,
@@ -90,9 +88,7 @@ def apply_patches_with_revert(
 
                 # Revert all previously applied patches in reverse order
                 if applied_patches:
-                    logger.info(
-                        f"Reverting {len(applied_patches)} previously applied patches"
-                    )
+                    logger.info(f"Reverting {len(applied_patches)} previously applied patches")
                     for j, applied_patch in enumerate(reversed(applied_patches)):
                         logger.info(
                             f"Reverting patch {len(applied_patches) - j}/{len(applied_patches)}"
@@ -100,9 +96,7 @@ def apply_patches_with_revert(
                         revert_result = revert_patch(file_path, applied_patch)
 
                         if not revert_result["success"]:
-                            logger.error(
-                                f"CRITICAL: Revert failed: {revert_result['error']}"
-                            )
+                            logger.error(f"CRITICAL: Revert failed: {revert_result['error']}")
                             raise Exception(
                                 f"Cannot revert patches - manual intervention required. "
                                 f"Revert failed at patch {len(applied_patches) - j} with error: "
@@ -264,9 +258,7 @@ def apply_patch_with_backup(
         }
 
 
-def apply_patches_atomic(
-    file_patch_pairs: List[Tuple[str, str]]
-) -> Dict[str, Any]:
+def apply_patches_atomic(file_patch_pairs: List[Tuple[str, str]]) -> Dict[str, Any]:
     """Apply multiple patches to multiple files atomically (all-or-nothing).
 
     This pattern validates all patches first, creates backups for all files,
@@ -360,9 +352,7 @@ def apply_patches_atomic(
         for file_path, _ in file_patch_pairs:
             backup_result = backup_file(file_path)
             if not backup_result["success"]:
-                raise Exception(
-                    f"Backup failed for {file_path}: {backup_result['error']}"
-                )
+                raise Exception(f"Backup failed for {file_path}: {backup_result['error']}")
             backups[file_path] = backup_result["backup_file"]
 
         logger.info(f"Created {len(backups)} backups")
@@ -421,8 +411,7 @@ def apply_patches_atomic(
                 restore_backup(backup_path)
             except Exception as restore_error:
                 logger.error(
-                    f"CRITICAL: Cannot restore {file_path} from {backup_path}: "
-                    f"{restore_error}"
+                    f"CRITICAL: Cannot restore {file_path} from {backup_path}: " f"{restore_error}"
                 )
 
         return {
@@ -504,9 +493,7 @@ def apply_patch_progressive(file_path: str, patch: str) -> Dict[str, Any]:
     }
 
     if not validation.get("can_apply", False):
-        results["error"] = validation.get("reason") or validation.get(
-            "error", "Validation failed"
-        )
+        results["error"] = validation.get("reason") or validation.get("error", "Validation failed")
         results["error_type"] = validation.get("error_type", "context_mismatch")
         results["failed_at"] = "validation"
         return results

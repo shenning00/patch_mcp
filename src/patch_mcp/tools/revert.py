@@ -85,7 +85,9 @@ def revert_patch(file_path: str, patch: str) -> Dict[str, Any]:
         # Transform error message
         error_msg = result.get("error", "Cannot revert patch")
         if "context" in error_msg.lower() or "mismatch" in error_msg.lower():
-            error_msg = f"Cannot revert: file has been modified since patch was applied. {error_msg}"
+            error_msg = (
+                f"Cannot revert: file has been modified since patch was applied. {error_msg}"
+            )
 
         return {
             "success": False,

@@ -71,9 +71,7 @@ def apply_patch(file_path: str, patch: str, dry_run: bool = False) -> Dict[str, 
 
     # Security checks
     # For dry_run, we don't need write or space checks
-    safety_error = validate_file_safety(
-        path, check_write=not dry_run, check_space=not dry_run
-    )
+    safety_error = validate_file_safety(path, check_write=not dry_run, check_space=not dry_run)
     if safety_error:
         return {
             "success": False,
