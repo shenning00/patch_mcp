@@ -593,3 +593,171 @@ class TestBackupRestoreIntegration:
 
         # Verify all copies exist
         assert all(loc.exists() for loc in locations)
+
+
+# ============================================================================
+# Error Path Coverage Tests
+# ============================================================================
+
+
+class TestBackupErrorPaths:
+    """Tests for uncovered error paths in backup.py to improve coverage."""
+
+    def test_backup_disk_space_check_exception(self, tmp_path, monkeypatch):
+        """Test exception during disk space check."""
+        original = tmp_path / "test.txt"
+        original.write_text("content\n")
+
+        # Mock shutil.disk_usage to raise exception
+        import shutil
+        def mock_disk_usage(path):
+            raise OSError("Cannot check disk space")
+
+        monkeypatch.setattr(shutil, "disk_usage", mock_disk_usage)
+
+        result = backup_file(str(original))
+
+        # Should fail with io_error
+        assert result["success"] is False
+        assert result["error_type"] == "io_error"
+        assert "disk space" in result["error"].lower()
+
+    def test_backup_insufficient_disk_space_minimum(self, tmp_path, monkeypatch):
+        """Test insufficient disk space (below 100MB minimum)."""
+        original = tmp_path / "test.txt"
+        original.write_text("content\n")
+
+        # Mock disk_usage to return insufficient space
+        import shutil
+        from collections import namedtuple
+        DiskUsage = namedtuple("DiskUsage", ["total", "used", "free"])
+
+        def mock_disk_usage(path):
+            # Return 50MB free (below 100MB minimum)
+            return DiskUsage(total=1000000000, used=950000000, free=50000000)
+
+        monkeypatch.setattr(shutil, "disk_usage", mock_disk_usage)
+
+        result = backup_file(str(original))
+
+        # Should fail with disk_space_error
+        assert result["success"] is False
+        assert result["error_type"] == "disk_space_error"
+        assert "insufficient" in result["error"].lower()
+
+    def test_backup_insufficient_disk_space_safety_margin(self, tmp_path, monkeypatch):
+        """Test insufficient disk space for 110% safety margin."""
+        original = tmp_path / "large.txt"
+        # Create 1MB file
+        content = "x" * (1024 * 1024)
+        original.write_text(content)
+
+        # Mock disk_usage to return space > 100MB but < 110% of file size
+        import shutil
+        from collections import namedtuple
+        DiskUsage = namedtuple("DiskUsage", ["total", "used", "free"])
+
+        def mock_disk_usage(path):
+            # Return 101MB free (above minimum but below 110% of 1MB file)
+            # Actually we need less than 1.1MB for a 1MB file
+            return DiskUsage(total=1000000000, used=999000000, free=1000000)
+
+        monkeypatch.setattr(shutil, "disk_usage", mock_disk_usage)
+
+        result = backup_file(str(original))
+
+        # Should fail with disk_space_error
+        assert result["success"] is False
+        assert result["error_type"] == "disk_space_error"
+        assert "safety margin" in result["error"].lower() or "insufficient" in result["error"].lower()
+
+    def test_backup_oserror_disk_full(self, tmp_path, monkeypatch):
+        """Test OSError with 'no space' message during backup."""
+        original = tmp_path / "test.txt"
+        original.write_text("content\n")
+
+        # Mock shutil.copy2 to raise OSError with disk full message
+        import shutil
+        original_copy2 = shutil.copy2
+
+        def mock_copy2(src, dst):
+            raise OSError("No space left on device")
+
+        monkeypatch.setattr(shutil, "copy2", mock_copy2)
+
+        result = backup_file(str(original))
+
+        # Should catch OSError and return disk_space_error
+        assert result["success"] is False
+        assert result["error_type"] == "disk_space_error"
+        assert "disk" in result["error"].lower()
+
+    def test_backup_oserror_generic(self, tmp_path, monkeypatch):
+        """Test generic OSError during backup."""
+        original = tmp_path / "test.txt"
+        original.write_text("content\n")
+
+        # Mock shutil.copy2 to raise generic OSError
+        import shutil
+
+        def mock_copy2(src, dst):
+            raise OSError("Generic I/O error")
+
+        monkeypatch.setattr(shutil, "copy2", mock_copy2)
+
+        result = backup_file(str(original))
+
+        # Should catch OSError and return io_error
+        assert result["success"] is False
+        assert result["error_type"] == "io_error"
+        assert "I/O error" in result["error"]
+
+    def test_backup_unexpected_exception(self, tmp_path, monkeypatch):
+        """Test unexpected exception during backup."""
+        original = tmp_path / "test.txt"
+        original.write_text("content\n")
+
+        # Mock shutil.copy2 to raise unexpected exception
+        import shutil
+
+        def mock_copy2(src, dst):
+            raise RuntimeError("Unexpected error")
+
+        monkeypatch.setattr(shutil, "copy2", mock_copy2)
+
+        result = backup_file(str(original))
+
+        # Should catch exception and return io_error
+        assert result["success"] is False
+        assert result["error_type"] == "io_error"
+        assert "unexpected" in result["error"].lower()
+
+    def test_restore_backup_cleanup_failure(self, tmp_path, monkeypatch):
+        """Test restore when backup cleanup fails."""
+        original = tmp_path / "test.txt"
+        original.write_text("original\n")
+
+        backup_result = backup_file(str(original))
+        assert backup_result["success"] is True
+
+        # Modify original
+        original.write_text("modified\n")
+
+        # Mock Path.unlink to raise exception (cleanup failure)
+        from pathlib import Path
+        original_unlink = Path.unlink
+
+        def mock_unlink(self, *args, **kwargs):
+            if "backup" in str(self):
+                raise OSError("Cannot delete backup")
+            return original_unlink(self, *args, **kwargs)
+
+        monkeypatch.setattr(Path, "unlink", mock_unlink)
+
+        result = restore_backup(backup_result["backup_file"])
+
+        # Should succeed despite cleanup failure
+        assert result["success"] is True
+        assert "restored" in result["message"].lower()
+        # Verify content was restored
+        assert original.read_text() == "original\n"
