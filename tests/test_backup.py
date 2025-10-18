@@ -55,7 +55,9 @@ class TestBackupFile:
 
         # Check format: config.py.backup.20250117_143052
         pattern = r"^config\.py\.backup\.\d{8}_\d{6}$"
-        assert re.match(pattern, backup_file_name), f"Backup name '{backup_file_name}' doesn't match pattern"
+        assert re.match(
+            pattern, backup_file_name
+        ), f"Backup name '{backup_file_name}' doesn't match pattern"
 
         # Verify timestamp is recent (within last minute)
         timestamp_part = backup_file_name.split(".backup.")[1]

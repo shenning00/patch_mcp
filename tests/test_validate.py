@@ -200,8 +200,7 @@ class TestValidatePatch:
         """Validate patch with multiple hunks."""
         file = tmp_path / "file.py"
         file.write_text(
-            "line1\nline2\nline3\nline4\nline5\n"
-            "line6\nline7\nline8\nline9\nline10\n"
+            "line1\nline2\nline3\nline4\nline5\n" "line6\nline7\nline8\nline9\nline10\n"
         )
 
         patch = """--- file.py
