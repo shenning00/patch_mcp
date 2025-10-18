@@ -494,16 +494,16 @@ Each patch builds on the previous state.
 
 ---
 
-## Integration with CLAUDE.md
+## Integration with Project Documentation
 
-Add this to your CLAUDE.md file in the "File Editing" or "Tools" section:
+Add this to your project's AI assistant instructions (e.g., CLAUDE.md) in the "File Editing" or "Tools" section:
 
 ```markdown
 ## File Editing: apply_patch Tool
 
 Use the `apply_patch` MCP tool for all file modifications.
 
-See [apply_patch_tool_use.md](apply_patch_tool_use.md) for:
+See @docs/apply_patch_tool_use.md for:
 - Multi-hunk patches (atomic multiple changes)
 - Selective revert techniques
 - Output formatting guidelines

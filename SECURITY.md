@@ -80,8 +80,6 @@ For security-related questions (non-vulnerabilities):
 - Open a [Discussion](https://github.com/shenning00/patch_mcp/discussions)
 - Create an [Issue](https://github.com/shenning00/patch_mcp/issues) (for non-sensitive questions)
 
-**For vulnerability reports, use the private reporting methods above.**
-
 ---
 
 Thank you for helping keep Patch MCP Server secure! 🔒

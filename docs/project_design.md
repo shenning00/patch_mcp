@@ -1289,7 +1289,7 @@ NON_TEXT_THRESHOLD = 0.3  # 30% non-text chars = binary
 ### Project Structure
 
 ```
-patch-ng-mcp/
+patch_mcp/
 ├── src/
 │   ├── patch_mcp/
 │   │   ├── __init__.py
