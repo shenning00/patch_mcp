@@ -210,8 +210,8 @@ def _parse_patch_hunks(patch: str) -> list[Dict[str, Any]]:
     Returns:
         List of hunk dictionaries
     """
-    hunks = []
-    current_hunk = None
+    hunks: list[Dict[str, Any]] = []
+    current_hunk: Dict[str, Any] | None = None
     lines = patch.split("\n")
 
     for line in lines:

@@ -140,7 +140,7 @@ def _split_into_file_sections(patch: str) -> List[str]:
         List of patch sections, one per file
     """
     sections = []
-    current_section = []
+    current_section: list[str] = []
     lines = patch.split("\n")
 
     for line in lines:

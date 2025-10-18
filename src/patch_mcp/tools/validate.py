@@ -193,8 +193,8 @@ def _parse_patch(patch: str) -> Dict[str, Any]:
         }
 
     lines = patch.split("\n")
-    hunks = []
-    current_hunk = None
+    hunks: list[Dict[str, Any]] = []
+    current_hunk: Dict[str, Any] | None = None
     lines_to_add = 0
     lines_to_remove = 0
     found_header = False
