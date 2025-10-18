@@ -427,3 +427,47 @@ class TestApplyPatch:
         assert "old_line1" not in content
         assert "old_line2" not in content
         assert "old_line3" in content
+
+    def test_apply_patch_with_triple_quotes(self, tmp_path):
+        """Apply patch that adds/removes lines containing triple quotes."""
+        # Create file with docstring
+        file = tmp_path / "module.py"
+        file.write_text('def foo():\n    """Old docstring"""\n    return 42\n')
+
+        # Create patch that changes a docstring (contains triple quotes)
+        # Use single quotes for the outer string to avoid escaping
+        patch = '''--- module.py
+@@ -1,3 +1,3 @@
+ def foo():
+-    """Old docstring"""
++    """New docstring with more detail"""
+     return 42
+'''
+
+        result = apply_patch(str(file), patch)
+
+        # Verify success
+        assert result["success"] is True
+        assert result["applied"] is True
+
+        # Verify the triple quotes were handled correctly
+        content = file.read_text()
+        assert '"""New docstring with more detail"""' in content
+        assert '"""Old docstring"""' not in content
+
+    def test_apply_patch_adding_triple_quoted_string(self, tmp_path):
+        """Apply patch that adds a new triple-quoted string."""
+        file = tmp_path / "test.py"
+        file.write_text("x = 1\ny = 2\n")
+
+        # Patch adds a docstring
+        patch = '''--- test.py
+@@ -1,2 +1,3 @@
++"""Module docstring"""
+ x = 1
+ y = 2
+'''
+
+        result = apply_patch(str(file), patch)
+        assert result["success"] is True
+        assert '"""Module docstring"""' in file.read_text()
