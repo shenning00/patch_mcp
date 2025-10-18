@@ -610,6 +610,7 @@ class TestBackupErrorPaths:
 
         # Mock shutil.disk_usage to raise exception
         import shutil
+
         def mock_disk_usage(path):
             raise OSError("Cannot check disk space")
 
@@ -630,6 +631,7 @@ class TestBackupErrorPaths:
         # Mock disk_usage to return insufficient space
         import shutil
         from collections import namedtuple
+
         DiskUsage = namedtuple("DiskUsage", ["total", "used", "free"])
 
         def mock_disk_usage(path):
@@ -655,6 +657,7 @@ class TestBackupErrorPaths:
         # Mock disk_usage to return space > 100MB but < 110% of file size
         import shutil
         from collections import namedtuple
+
         DiskUsage = namedtuple("DiskUsage", ["total", "used", "free"])
 
         def mock_disk_usage(path):
@@ -669,7 +672,9 @@ class TestBackupErrorPaths:
         # Should fail with disk_space_error
         assert result["success"] is False
         assert result["error_type"] == "disk_space_error"
-        assert "safety margin" in result["error"].lower() or "insufficient" in result["error"].lower()
+        assert (
+            "safety margin" in result["error"].lower() or "insufficient" in result["error"].lower()
+        )
 
     def test_backup_oserror_disk_full(self, tmp_path, monkeypatch):
         """Test OSError with 'no space' message during backup."""
@@ -678,6 +683,7 @@ class TestBackupErrorPaths:
 
         # Mock shutil.copy2 to raise OSError with disk full message
         import shutil
+
         original_copy2 = shutil.copy2
 
         def mock_copy2(src, dst):
@@ -745,6 +751,7 @@ class TestBackupErrorPaths:
 
         # Mock Path.unlink to raise exception (cleanup failure)
         from pathlib import Path
+
         original_unlink = Path.unlink
 
         def mock_unlink(self, *args, **kwargs):

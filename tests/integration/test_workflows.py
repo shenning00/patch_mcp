@@ -670,12 +670,14 @@ class TestWorkflowsErrorPaths:
 
         # Create a backup first
         from patch_mcp.tools.backup import backup_file
+
         backup_result = backup_file(str(test_file))
         assert backup_result["success"] is True
 
         # Now manually delete the backup and test restore failure
         # This simulates a restore failure scenario
         import os
+
         backup_path = backup_result["backup_file"]
 
         # Apply a bad patch which will trigger restore
@@ -768,11 +770,7 @@ class TestWorkflowsErrorPaths:
 
         # Mock backup_file to fail
         def mock_backup_fail(file_path):
-            return {
-                "success": False,
-                "error": "Backup failed",
-                "error_type": "io_error"
-            }
+            return {"success": False, "error": "Backup failed", "error_type": "io_error"}
 
         monkeypatch.setattr("patch_mcp.workflows.backup_file", mock_backup_fail)
 
@@ -806,11 +804,7 @@ class TestWorkflowsErrorPaths:
 
         # Mock restore to fail
         def mock_restore_fail(backup_file, target_file=None, force=False):
-            return {
-                "success": False,
-                "error": "Restore failed",
-                "error_type": "io_error"
-            }
+            return {"success": False, "error": "Restore failed", "error_type": "io_error"}
 
         monkeypatch.setattr("patch_mcp.workflows.restore_backup", mock_restore_fail)
 
@@ -834,6 +828,7 @@ class TestWorkflowsErrorPaths:
 
         # Mock Path.unlink to fail for cleanup
         from pathlib import Path
+
         original_unlink = Path.unlink
 
         def mock_unlink_fail(self, *args, **kwargs):
