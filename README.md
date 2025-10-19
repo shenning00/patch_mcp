@@ -4,11 +4,11 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Coverage](https://img.shields.io/badge/coverage-83%25-brightgreen.svg)](https://github.com/shenning00/patch_mcp)
+[![Coverage](https://img.shields.io/badge/coverage-84%25-brightgreen.svg)](https://github.com/shenning00/patch_mcp)
 
 A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that enables AI assistants to safely apply unified diff patches to files with comprehensive security validation.
 
-**Version**: 2.0.0 | **Status**: Production Ready | **Tools**: 7 | **Test Coverage**: 83% (244 tests)
+**Version**: 2.0.0 | **Status**: Production Ready | **Tools**: 7 | **Test Coverage**: 84% (286 tests)
 
 ---
 
@@ -19,7 +19,7 @@ Enable your AI assistant to:
 - ✅ **Validate patches** before applying them
 - ✅ **Create and restore backups** automatically
 - ✅ **Revert changes** safely if something goes wrong
-- ✅ **Handle multi-file changes** atomically
+- ✅ **Apply multiple changes atomically** via multi-hunk patches
 - ✅ **Test changes** with dry-run mode before committing
 
 All with **built-in security** (no symlinks, binary files, or directory traversal) and **automatic rollback** on failures.
@@ -141,7 +141,11 @@ Args: {
   "file_path": "config.py",
   "patch": "--- config.py\n+++ config.py\n@@ -10,3 +10,3 @@\n-timeout = 30\n+timeout = 60"
 }
-Result: {"can_apply": true, "preview": {"lines_to_add": 1, "lines_to_remove": 1}}
+Result: {
+  "success": true,
+  "can_apply": true,
+  "preview": {"lines_to_add": 1, "lines_to_remove": 1}
+}
 ```
 
 3. **Create backup before applying:**
@@ -279,8 +283,8 @@ The server provides 10 distinct error types for precise error handling:
 
 ## Testing & Quality
 
-- **244 tests** (all passing)
-- **83% code coverage** across all modules
+- **286 tests** (all passing)
+- **84% code coverage** across all modules
 - **Strict type checking** with mypy
 - **Code formatting** with black
 - **Linting** with ruff
