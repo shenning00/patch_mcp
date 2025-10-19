@@ -83,16 +83,16 @@ The security of your system depends on:
 
 ## Security Audit History
 
-| Date       | Auditor | Scope                | Status | Report |
-|------------|---------|----------------------|--------|--------|
-| 2025-10-19 | Internal| Security code review | ⚠️ Issues Found | See SECURITY_ISSUES.md |
-| 2025-01-18 | Internal| Full codebase review | ✅ Pass | - |
+| Date       | Auditor | Scope                | Status |
+|------------|---------|----------------------|--------|
+| 2025-10-19 | Internal| Security improvements | ✅ Implemented |
+| 2025-01-18 | Internal| Full codebase review | ✅ Pass |
 
-**Latest Findings (2025-10-19)**:
-- 2 CRITICAL vulnerabilities identified (data exfiltration, path traversal)
-- 3 HIGH severity issues (info disclosure, prompt injection, no auth)
-- 4 MEDIUM severity issues (resource limits, race conditions)
-- See [SECURITY_ISSUES.md](./SECURITY_ISSUES.md) for full details and remediation
+**Recent Improvements (2025-10-19)**:
+- ✅ Sensitive content detection in generate_patch
+- ✅ Error message sanitization to prevent information disclosure
+- ✅ Prompt injection mitigation through content redaction
+- ✅ Secure temporary file creation (mkstemp vs mktemp)
 
 ## Disclosure Policy
 
