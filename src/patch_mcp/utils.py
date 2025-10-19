@@ -258,9 +258,10 @@ def sanitize_error_message(message: str, max_content_length: int = 50) -> str:
     """
     # Pattern 1: Replace long quoted strings with [CONTENT]
     import re
+    from re import Match
 
     # Find quoted strings longer than max_content_length
-    def replace_long_quotes(match):
+    def replace_long_quotes(match: Match[str]) -> str:
         content = match.group(1)
         if len(content) > max_content_length:
             return "'[CONTENT]'"
