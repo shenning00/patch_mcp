@@ -1,13 +1,14 @@
 """MCP Server for File Patch operations.
 
 This module implements the Model Context Protocol (MCP) server that registers
-and routes all 4 core patch tools.
+and routes all 5 core patch tools.
 
 Tools provided:
     1. apply_patch - Apply a patch to a file (supports dry_run)
     2. validate_patch - Check if a patch can be applied
     3. backup_file - Create a timestamped backup
     4. restore_backup - Restore a file from backup
+    5. update_content - Update file content from original and new content
 
 BREAKING CHANGE (v3.0.0):
     Removed tools: revert_patch, generate_patch, inspect_patch
@@ -26,7 +27,7 @@ from mcp.server import Server
 from mcp.types import Resource, TextContent, Tool
 
 # Import core tool implementations
-from .tools import apply, backup, validate
+from .tools import apply, backup, update, validate
 
 # Create MCP server instance
 server = Server("patch-mcp")
@@ -34,7 +35,7 @@ server = Server("patch-mcp")
 
 @server.list_tools()  # type: ignore[misc,no-untyped-call]
 async def list_tools() -> list[Tool]:
-    """List all 4 core tools with their schemas.
+    """List all 5 core tools with their schemas.
 
     Returns:
         List of Tool objects with proper input schemas
@@ -139,10 +140,50 @@ FEATURES:
                 "required": ["backup_file"],
             },
         ),
+        Tool(
+            name="update_content",
+            description="""⭐ RECOMMENDED FOR LLMs - Update file content when you have read the file.
+
+Simplest way to modify files when you have the file content in memory. Verifies original content matches file (prevents race conditions), generates unified diff, and applies changes atomically.
+
+WHEN TO USE (recommended for LLMs):
+✓ You have read the file and want to modify it
+✓ You have both original and new content in memory
+✓ You want to see a diff of your changes (for review)
+✓ You want safety verification (prevents overwriting unexpected changes)
+
+ADVANTAGES:
+• Simple API: Just provide original_content and new_content
+• Safety: Verifies file hasn't changed since you read it
+• Reviewable: Returns unified diff showing exactly what changed
+• Dry-run: Preview changes before applying
+• No manual patch creation: Tool generates the diff for you
+
+COMPARISON:
+• update_content: When you have the content in memory (easiest for LLMs)
+• apply_patch: When you have a pre-generated patch from git/tools
+• Edit: When you need simple string find/replace""",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "file_path": {"type": "string", "description": "Path to the file to update"},
+                    "original_content": {
+                        "type": "string",
+                        "description": "Expected current file content (for verification)",
+                    },
+                    "new_content": {"type": "string", "description": "Desired new file content"},
+                    "dry_run": {
+                        "type": "boolean",
+                        "description": "Preview changes without applying (default: false)",
+                        "default": False,
+                    },
+                },
+                "required": ["file_path", "original_content", "new_content"],
+            },
+        ),
     ]
 
 
-@server.list_resources()  # type: ignore[misc,no-untyped-call]
 async def list_resources() -> list[Resource]:
     """List available documentation resources.
 
@@ -229,6 +270,12 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
             arguments["backup_file"],
             arguments.get("target_file"),
             arguments.get("force", False),
+        )
+    elif name == "update_content":
+        result = update.update_content(
+            arguments["file_path"],
+            arguments["original_content"],
+            arguments.get("dry_run", False),
         )
     else:
         raise ValueError(f"Unknown tool: {name}")

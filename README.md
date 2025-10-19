@@ -4,17 +4,18 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Coverage](https://img.shields.io/badge/coverage-84%25-brightgreen.svg)](https://github.com/shenning00/patch_mcp)
+[![Coverage](https://img.shields.io/badge/coverage-79%25-green.svg)](https://github.com/shenning00/patch_mcp)
 
 A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that enables AI assistants to safely apply unified diff patches to files with comprehensive security validation.
 
-**Version**: 3.0.0 | **Status**: Beta | **Tools**: 4 | **Test Coverage**: 84%
+**Version**: 3.0.0 | **Status**: Beta | **Tools**: 5 | **Test Coverage**: 79%
 
 ---
 
 ## Why Patch MCP Server?
 
 Enable your AI assistant to:
+- ✅ **Update files** with content you have in memory (easiest for LLMs!)
 - ✅ **Apply code changes** using standard unified diff format
 - ✅ **Validate patches** before applying them
 - ✅ **Create and restore backups** automatically
@@ -23,32 +24,7 @@ Enable your AI assistant to:
 
 All with **built-in security** (no symlinks, binary files, or directory traversal) and **comprehensive safety features**.
 
-**v3.0 simplification**: Reduced from 7 tools to 4 core tools for a cleaner, more focused API. See [DEPRECATION.md](DEPRECATION.md) for details.
-
----
-
-## Why Use Patch Tools Instead of Direct Editing?
-
-For AI assistants and developers, **apply_patch provides significant advantages over traditional Edit operations**:
-
-| Feature | apply_patch | Edit Tool |
-|---------|-------------|-----------|
-| **Format** | Standard unified diff (like git diff) | Custom old/new strings |
-| **Multiple changes** | ✅ Multi-hunk (atomic) | ❌ Separate calls (no atomicity) |
-| **Change visibility** | ✅ Clear diff view | ❌ Hard to spot differences |
-| **Token efficiency** | ✅ ~50% less tokens | ❌ Full old+new strings required |
-| **Testing** | ✅ Dry-run mode available | ❌ No preview capability |
-| **Atomicity** | ✅ All changes succeed/fail together | ❌ Partial updates possible |
-| **Reviewability** | ✅ Standard format developers know | ❌ Custom format |
-
-### Real-World Example
-
-**Task**: Update 3 config values in one file
-
-- **Edit**: 3 separate tool calls, no atomicity, hard to review
-- **apply_patch**: 1 call with 3 hunks, atomic operation, clear diff
-
-**Bottom line**: For most file modifications, apply_patch is more efficient, safer, and clearer than Edit operations.
+**v3.0.1 enhancement**: Added `update_content` - the simplest way for LLMs to modify files when you have the content in memory!
 
 ---
 
@@ -97,7 +73,18 @@ The server runs in stdio mode and communicates via the Model Context Protocol.
 
 ## Available Tools
 
-The server provides 4 core tools for safe, efficient patch management:
+The server provides 5 tools for safe, efficient patch management:
+
+### Recommended for LLMs
+
+**⭐ `update_content`** - Update file when you have the content in memory
+   - **Simplest API**: Just provide original and new content
+   - **Safety verification**: Confirms file hasn't changed since you read it
+   - **Auto-generates diff**: No manual patch creation needed
+   - **Reviewable**: Returns unified diff showing changes
+   - **Dry-run support**: Preview before applying
+
+   **When to use**: You've read a file and want to modify it (most common LLM use case!)
 
 ### Core Patch Operations
 
@@ -106,6 +93,8 @@ The server provides 4 core tools for safe, efficient patch management:
    - Dry-run mode for testing without modification
    - Automatic validation before application
    - ~50% more token-efficient than Edit operations
+
+   **When to use**: You have a pre-generated patch from git or other tools
 
 2. **`validate_patch`** - Check if a patch can be applied (read-only)
    - Preview changes before applying
@@ -127,23 +116,79 @@ The server provides 4 core tools for safe, efficient patch management:
 
 ---
 
-## What Changed in v3.0?
+## Tool Comparison: When to Use Which Tool?
 
-**BREAKING CHANGE**: Removed 3 tools to simplify the API:
-- ❌ `revert_patch` - Use `apply_patch` with reversed patch or `restore_backup`
-- ❌ `generate_patch` - LLMs generate patches mentally; use `git diff` for files
-- ❌ `inspect_patch` - LLMs can parse unified diff format natively
+| Tool | Use When | Input Required | Generates Diff? |
+|------|----------|----------------|-----------------|
+| **update_content** | You have file content in memory | original_content + new_content | ✅ Yes |
+| **apply_patch** | You have a pre-made patch | unified diff patch | ❌ No (patch provided) |
+| **Edit (Claude's built-in)** | Simple string find/replace | old_string + new_string | ❌ No |
 
-See [DEPRECATION.md](DEPRECATION.md) for detailed rationale and migration guide
+**Recommendation for LLMs**: Use `update_content` for most file modifications - it's the simplest and safest option!
 
 ---
 
 ## Example: How an AI Assistant Uses This Server
 
-### Scenario 1: Simple Code Modification
+### Scenario 1: Simple Code Modification (with update_content)
 
 **AI Assistant's thought process:**
-> "The user wants to change the timeout from 30 to 60 seconds in config.py. I'll use the patch server to do this safely."
+> "The user wants to change the timeout from 30 to 60 seconds in config.py. I'll use update_content since I have the file in memory."
+
+**AI uses tools:**
+
+1. **Read the file** (using built-in Read tool):
+```python
+original_content = """
+timeout = 30
+retries = 3
+debug = False
+"""
+```
+
+2. **Construct new content in memory**:
+```python
+new_content = """
+timeout = 60
+retries = 3
+debug = False
+"""
+```
+
+3. **Update with safety verification**:
+```
+Tool: update_content
+Args: {
+  "file_path": "config.py",
+  "original_content": "timeout = 30\nretries = 3\ndebug = False\n",
+  "new_content": "timeout = 60\nretries = 3\ndebug = False\n",
+  "dry_run": false
+}
+Result: {
+  "success": true,
+  "applied": true,
+  "diff": "--- config.py\n+++ config.py\n@@ -1,3 +1,3 @@\n-timeout = 30\n+timeout = 60\n retries = 3\n debug = False",
+  "changes": {"lines_added": 1, "lines_removed": 1, "hunks": 1}
+}
+```
+
+**AI reports to user:**
+> "I've updated the timeout from 30 to 60 seconds in config.py."
+
+**Advantages of update_content:**
+- ✅ No manual patch creation
+- ✅ Verifies file hasn't changed
+- ✅ Returns diff for review
+- ✅ Single tool call
+
+---
+
+### Scenario 2: Using apply_patch with Pre-Generated Patch
+
+**When to use apply_patch instead of update_content:**
+- You have a patch from `git diff`
+- You're applying patches from a patch file
+- You want maximum token efficiency (patch is smaller than full content)
 
 **AI uses tools:**
 
@@ -156,19 +201,11 @@ Args: {
 }
 Result: {
   "success": true,
-  "can_apply": true,
-  "preview": {"lines_to_add": 1, "lines_to_remove": 1}
+  "can_apply": true
 }
 ```
 
-2. **Create backup before applying:**
-```
-Tool: backup_file
-Args: {"file_path": "config.py"}
-Result: {"backup_file": "config.py.backup.20250118_143052"}
-```
-
-3. **Apply the patch:**
+2. **Apply the patch:**
 ```
 Tool: apply_patch
 Args: {
@@ -177,57 +214,6 @@ Args: {
 }
 Result: {"success": true, "applied": true}
 ```
-
-**AI reports to user:**
-> "I've updated the timeout from 30 to 60 seconds in config.py. A backup was created at config.py.backup.20250118_143052 in case you need to revert."
-
----
-
-### Scenario 2: Multi-file Refactoring with Dry Run
-
-**AI Assistant's thought process:**
-> "The user wants to rename a function across 3 files. I should test this first with dry-run, then apply atomically."
-
-**AI uses tools:**
-
-1. **Test each patch with dry-run:**
-```
-Tool: apply_patch
-Args: {
-  "file_path": "utils.py",
-  "patch": "...",
-  "dry_run": true
-}
-Result: {"success": true, "changes": {"lines_added": 5, "lines_removed": 5}}
-```
-
-2. **Apply all patches:**
-```
-Applies each patch with backups and validation
-```
-
-**AI reports to user:**
-> "I've renamed the function across utils.py, handlers.py, and tests.py. All changes were validated first and applied atomically."
-
----
-
-### Scenario 3: Something Goes Wrong
-
-**AI Assistant's thought process:**
-> "The patch failed to apply. I should revert to the backup."
-
-**AI uses tools:**
-
-```
-Tool: restore_backup
-Args: {
-  "backup_file": "config.py.backup.20250118_143052"
-}
-Result: {"success": true, "restored_to": "config.py"}
-```
-
-**AI reports to user:**
-> "The patch couldn't be applied because the file content didn't match. I've restored the original file from backup. The file may have been modified since we discussed the change."
 
 ---
 
@@ -239,9 +225,9 @@ All operations include comprehensive security checks:
 - 🔒 **Binary File Detection** - Binary files automatically detected and rejected
 - 🔒 **Size Limits** - Maximum 10MB file size
 - 🔒 **Disk Space Validation** - Ensures 100MB+ free space before operations
-- 🔒 **Path Traversal Protection** - Prevents directory escaping
 - 🔒 **Permission Checks** - Validates read/write permissions
 - 🔒 **Atomic Operations** - File replacements use atomic rename
+- 🔒 **Content Verification** - update_content verifies file hasn't changed
 
 See [SECURITY.md](SECURITY.md) for detailed security information.
 
@@ -292,12 +278,15 @@ The server provides 10 distinct error types for precise error handling:
 **Security Errors:**
 - `symlink_error`, `binary_file`, `disk_space_error`, `resource_limit`
 
+**Special Errors (update_content):**
+- `content_mismatch` - File has changed since you read it
+
 ---
 
 ## Testing & Quality
 
-- **286 tests** (all passing)
-- **84% code coverage** across all modules
+- **113 tests** (all passing)
+- **79% code coverage** across all modules
 - **Strict type checking** with mypy
 - **Code formatting** with black
 - **Linting** with ruff
@@ -352,4 +341,4 @@ This server implements the [Model Context Protocol (MCP)](https://modelcontextpr
 
 ---
 
-**Last Updated**: 2025-01-19 | **Phase**: 5 of 5 (Beta) | **Tools**: 4 core tools | **Version**: 3.0.0
+**Last Updated**: 2025-01-19 | **Phase**: 5 of 5 (Beta) | **Tools**: 5 core tools | **Version**: 3.0.1

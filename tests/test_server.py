@@ -30,9 +30,9 @@ class TestToolRegistration:
 
     @pytest.mark.asyncio
     async def test_list_tools_count(self):
-        """All 4 core tools are registered."""
+        """All 5 core tools are registered."""
         tools = await list_tools()
-        assert len(tools) == 4
+        assert len(tools) == 5
 
     @pytest.mark.asyncio
     async def test_tool_names(self):
@@ -45,8 +45,10 @@ class TestToolRegistration:
             "validate_patch",
             "backup_file",
             "restore_backup",
+            "update_content",
         }
 
+        assert tool_names == expected_names
         assert tool_names == expected_names
 
     @pytest.mark.asyncio
