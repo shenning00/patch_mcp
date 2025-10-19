@@ -6,7 +6,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Coverage](https://img.shields.io/badge/coverage-83%25-brightgreen.svg)](https://github.com/shenning00/patch_mcp)
 
-A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that enables AI assistants to safely apply unified diff patches to files with comprehensive security validation and error recovery workflows.
+A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that enables AI assistants to safely apply unified diff patches to files with comprehensive security validation.
 
 **Version**: 2.0.0 | **Status**: Production Ready | **Tools**: 7 | **Test Coverage**: 83% (244 tests)
 
@@ -184,9 +184,9 @@ Args: {
 Result: {"success": true, "changes": {"lines_added": 5, "lines_removed": 5}}
 ```
 
-2. **Apply all patches atomically:**
+2. **Apply all patches:**
 ```
-Uses workflow pattern (if available) or applies each patch with backups
+Applies each patch with backups and validation
 ```
 
 **AI reports to user:**
@@ -230,19 +230,6 @@ See [SECURITY.md](SECURITY.md) for detailed security information.
 
 ---
 
-## Error Recovery Workflows
-
-The server includes 4 built-in error recovery patterns accessible via the workflows module:
-
-1. **Try-Revert** - Apply patches sequentially, auto-revert on failure
-2. **Backup-Restore** - Automatic backup and restore on failure
-3. **Atomic Batch** - All patches succeed or all roll back
-4. **Progressive Validation** - Step-by-step with detailed error reporting
-
-See [WORKFLOWS.md](WORKFLOWS.md) for detailed workflow documentation.
-
----
-
 ## Multi-Hunk Patches
 
 A powerful feature: apply multiple changes to different parts of a file **atomically** in a single patch:
@@ -273,7 +260,6 @@ All three changes are applied together or none are applied. If any hunk fails, t
 ## Documentation
 
 - **[API.md](docs/API.md)** - Complete API reference for all tools
-- **[WORKFLOWS.md](WORKFLOWS.md)** - Error recovery workflow patterns
 - **[SECURITY.md](SECURITY.md)** - Security policy and best practices
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contributing guidelines
 - **[CHANGELOG.md](CHANGELOG.md)** - Version history and changes
@@ -357,4 +343,4 @@ This server implements the [Model Context Protocol (MCP)](https://modelcontextpr
 
 ---
 
-**Last Updated**: 2025-01-18 | **Phase**: 5 of 5 (Production Ready) | **Tools**: 7/7 | **Workflow Patterns**: 4/4
+**Last Updated**: 2025-10-19 | **Phase**: 5 of 5 (Production Ready) | **Tools**: 7/7
