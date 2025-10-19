@@ -1,16 +1,21 @@
 """MCP Server for File Patch operations.
 
 This module implements the Model Context Protocol (MCP) server that registers
-and routes all 7 patch tools.
+and routes all 4 core patch tools.
 
 Tools provided:
     1. apply_patch - Apply a patch to a file (supports dry_run)
     2. validate_patch - Check if a patch can be applied
-    3. revert_patch - Reverse a previously applied patch
-    4. generate_patch - Create a patch from two files
-    5. inspect_patch - Analyze patch content
-    6. backup_file - Create a timestamped backup
-    7. restore_backup - Restore a file from backup
+    3. backup_file - Create a timestamped backup
+    4. restore_backup - Restore a file from backup
+
+BREAKING CHANGE (v3.0.0):
+    Removed tools: revert_patch, generate_patch, inspect_patch
+    Rationale: These tools provided minimal value over core functionality.
+    - revert_patch: Just apply reversed patch with apply_patch
+    - generate_patch: LLMs generate patches mentally; git diff exists for files
+    - inspect_patch: LLMs can parse unified diff format natively
+    See DEPRECATION.md for migration guide.
 """
 
 import asyncio
@@ -20,8 +25,8 @@ from typing import Any
 from mcp.server import Server
 from mcp.types import Resource, TextContent, Tool
 
-# Import all tool implementations
-from .tools import apply, backup, generate, inspect, revert, validate
+# Import core tool implementations
+from .tools import apply, backup, validate
 
 # Create MCP server instance
 server = Server("patch-mcp")
@@ -29,7 +34,7 @@ server = Server("patch-mcp")
 
 @server.list_tools()  # type: ignore[misc,no-untyped-call]
 async def list_tools() -> list[Tool]:
-    """List all 7 available tools with their schemas.
+    """List all 4 core tools with their schemas.
 
     Returns:
         List of Tool objects with proper input schemas
@@ -94,61 +99,6 @@ FEATURES:
                     },
                 },
                 "required": ["file_path", "patch"],
-            },
-        ),
-        Tool(
-            name="revert_patch",
-            description="Reverse a previously applied patch. For multi-hunk patches, atomically reverts all changes that were applied together.",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "file_path": {
-                        "type": "string",
-                        "description": "Path to the file to revert",
-                    },
-                    "patch": {
-                        "type": "string",
-                        "description": "The same patch that was previously applied (including all hunks if it was a multi-hunk patch)",
-                    },
-                },
-                "required": ["file_path", "patch"],
-            },
-        ),
-        Tool(
-            name="generate_patch",
-            description="Generate a patch from two files",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "original_file": {
-                        "type": "string",
-                        "description": "Path to the original/old version of the file",
-                    },
-                    "modified_file": {
-                        "type": "string",
-                        "description": "Path to the modified/new version of the file",
-                    },
-                    "context_lines": {
-                        "type": "integer",
-                        "description": "Number of context lines (default: 3)",
-                        "default": 3,
-                    },
-                },
-                "required": ["original_file", "modified_file"],
-            },
-        ),
-        Tool(
-            name="inspect_patch",
-            description="Analyze patch content (supports multi-file patches)",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "patch": {
-                        "type": "string",
-                        "description": "Unified diff patch content to analyze",
-                    },
-                },
-                "required": ["patch"],
             },
         ),
         Tool(
@@ -272,19 +222,6 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
             arguments["file_path"],
             arguments["patch"],
         )
-    elif name == "revert_patch":
-        result = revert.revert_patch(
-            arguments["file_path"],
-            arguments["patch"],
-        )
-    elif name == "generate_patch":
-        result = generate.generate_patch(
-            arguments["original_file"],
-            arguments["modified_file"],
-            arguments.get("context_lines", 3),
-        )
-    elif name == "inspect_patch":
-        result = inspect.inspect_patch(arguments["patch"])
     elif name == "backup_file":
         result = backup.backup_file(arguments["file_path"])
     elif name == "restore_backup":

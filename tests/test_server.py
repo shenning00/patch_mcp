@@ -30,9 +30,9 @@ class TestToolRegistration:
 
     @pytest.mark.asyncio
     async def test_list_tools_count(self):
-        """All 7 tools are registered."""
+        """All 4 core tools are registered."""
         tools = await list_tools()
-        assert len(tools) == 7
+        assert len(tools) == 4
 
     @pytest.mark.asyncio
     async def test_tool_names(self):
@@ -43,9 +43,6 @@ class TestToolRegistration:
         expected_names = {
             "apply_patch",
             "validate_patch",
-            "revert_patch",
-            "generate_patch",
-            "inspect_patch",
             "backup_file",
             "restore_backup",
         }
@@ -104,42 +101,6 @@ class TestToolSchemas:
         assert "file_path" in schema["properties"]
         assert "patch" in schema["properties"]
         assert set(schema["required"]) == {"file_path", "patch"}
-
-    @pytest.mark.asyncio
-    async def test_revert_patch_schema(self):
-        """revert_patch has correct schema."""
-        tools = await list_tools()
-        revert_tool = next(t for t in tools if t.name == "revert_patch")
-
-        schema = revert_tool.inputSchema
-        assert "file_path" in schema["properties"]
-        assert "patch" in schema["properties"]
-        assert set(schema["required"]) == {"file_path", "patch"}
-
-    @pytest.mark.asyncio
-    async def test_generate_patch_schema(self):
-        """generate_patch has correct schema."""
-        tools = await list_tools()
-        generate_tool = next(t for t in tools if t.name == "generate_patch")
-
-        schema = generate_tool.inputSchema
-        assert "original_file" in schema["properties"]
-        assert "modified_file" in schema["properties"]
-        assert "context_lines" in schema["properties"]
-        assert set(schema["required"]) == {"original_file", "modified_file"}
-
-        # Check context_lines has default
-        assert schema["properties"]["context_lines"]["default"] == 3
-
-    @pytest.mark.asyncio
-    async def test_inspect_patch_schema(self):
-        """inspect_patch has correct schema."""
-        tools = await list_tools()
-        inspect_tool = next(t for t in tools if t.name == "inspect_patch")
-
-        schema = inspect_tool.inputSchema
-        assert "patch" in schema["properties"]
-        assert schema["required"] == ["patch"]
 
     @pytest.mark.asyncio
     async def test_backup_file_schema(self):
@@ -209,23 +170,6 @@ class TestToolRouting:
         # Check JSON is valid
         parsed = json.loads(result[0].text)
         assert "success" in parsed
-
-    @pytest.mark.asyncio
-    async def test_inspect_patch_routing(self):
-        """inspect_patch routes correctly."""
-        patch = """--- file.txt
-+++ file.txt
-@@ -1,1 +1,1 @@
--old
-+new
-"""
-
-        result = await call_tool("inspect_patch", {"patch": patch})
-
-        parsed = json.loads(result[0].text)
-        assert parsed["success"] is True
-        assert "files" in parsed
-        assert len(parsed["files"]) == 1
 
     @pytest.mark.asyncio
     async def test_backup_file_routing(self, tmp_path):
@@ -316,33 +260,3 @@ class TestToolIntegration:
 
         # Verify content restored
         assert test_file.read_text() == original_content
-
-    @pytest.mark.asyncio
-    async def test_generate_inspect_flow(self, tmp_path):
-        """Test generate followed by inspect workflow."""
-        # Setup
-        original = tmp_path / "original.txt"
-        modified = tmp_path / "modified.txt"
-        original.write_text("line1\nline2\n")
-        modified.write_text("line1\nline2_modified\n")
-
-        # Step 1: Generate patch
-        generate_result = await call_tool(
-            "generate_patch",
-            {
-                "original_file": str(original),
-                "modified_file": str(modified),
-            },
-        )
-
-        generate_data = json.loads(generate_result[0].text)
-        assert generate_data["success"] is True
-        patch = generate_data["patch"]
-
-        # Step 2: Inspect patch
-        inspect_result = await call_tool("inspect_patch", {"patch": patch})
-
-        inspect_data = json.loads(inspect_result[0].text)
-        assert inspect_data["success"] is True
-        assert inspect_data["files"][0]["lines_added"] == 1
-        assert inspect_data["files"][0]["lines_removed"] == 1

@@ -8,7 +8,7 @@
 
 A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that enables AI assistants to safely apply unified diff patches to files with comprehensive security validation.
 
-**Version**: 2.0.0 | **Status**: Beta | **Tools**: 7 | **Test Coverage**: 84% (286 tests)
+**Version**: 3.0.0 | **Status**: Beta | **Tools**: 4 | **Test Coverage**: 84%
 
 ---
 
@@ -18,11 +18,12 @@ Enable your AI assistant to:
 - ✅ **Apply code changes** using standard unified diff format
 - ✅ **Validate patches** before applying them
 - ✅ **Create and restore backups** automatically
-- ✅ **Revert changes** safely if something goes wrong
 - ✅ **Apply multiple changes atomically** via multi-hunk patches
 - ✅ **Test changes** with dry-run mode before committing
 
-All with **built-in security** (no symlinks, binary files, or directory traversal) and **automatic rollback** on failures.
+All with **built-in security** (no symlinks, binary files, or directory traversal) and **comprehensive safety features**.
+
+**v3.0 simplification**: Reduced from 7 tools to 4 core tools for a cleaner, more focused API. See [DEPRECATION.md](DEPRECATION.md) for details.
 
 ---
 
@@ -96,7 +97,7 @@ The server runs in stdio mode and communicates via the Model Context Protocol.
 
 ## Available Tools
 
-The server provides 7 tools for comprehensive patch management:
+The server provides 4 core tools for safe, efficient patch management:
 
 ### Core Patch Operations
 
@@ -104,40 +105,36 @@ The server provides 7 tools for comprehensive patch management:
    - Supports multi-hunk patches (apply multiple changes atomically)
    - Dry-run mode for testing without modification
    - Automatic validation before application
+   - ~50% more token-efficient than Edit operations
 
 2. **`validate_patch`** - Check if a patch can be applied (read-only)
    - Preview changes before applying
    - Detect context mismatches
    - See affected line ranges
-
-3. **`revert_patch`** - Reverse a previously applied patch
-   - Undo changes safely
-   - Works with multi-hunk patches
-   - Requires exact original patch
-
-4. **`generate_patch`** - Create a patch from two file versions
-   - Compare original and modified files
-   - Generate standard unified diff format
-   - Configurable context lines
-
-### Analysis & Inspection
-
-5. **`inspect_patch`** - Analyze patch content without files
-   - See what files are affected
-   - Count hunks and line changes
-   - Supports multi-file patches
+   - No file modification
 
 ### Backup & Recovery
 
-6. **`backup_file`** - Create timestamped backups
+3. **`backup_file`** - Create timestamped backups
    - Format: `filename.backup.YYYYMMDD_HHMMSS`
    - Preserves file metadata
    - Automatic disk space checks
 
-7. **`restore_backup`** - Restore from backups
+4. **`restore_backup`** - Restore from backups
    - Auto-detect original location
    - Safety checks before overwriting
    - Force option available
+
+---
+
+## What Changed in v3.0?
+
+**BREAKING CHANGE**: Removed 3 tools to simplify the API:
+- ❌ `revert_patch` - Use `apply_patch` with reversed patch or `restore_backup`
+- ❌ `generate_patch` - LLMs generate patches mentally; use `git diff` for files
+- ❌ `inspect_patch` - LLMs can parse unified diff format natively
+
+See [DEPRECATION.md](DEPRECATION.md) for detailed rationale and migration guide
 
 ---
 
@@ -150,16 +147,7 @@ The server provides 7 tools for comprehensive patch management:
 
 **AI uses tools:**
 
-1. **Generate the patch:**
-```
-Tool: generate_patch
-Args: {
-  "original_file": "config.py",
-  "modified_file": "config_new.py"
-}
-```
-
-2. **Validate it can be applied:**
+1. **Validate it can be applied:**
 ```
 Tool: validate_patch
 Args: {
@@ -173,14 +161,14 @@ Result: {
 }
 ```
 
-3. **Create backup before applying:**
+2. **Create backup before applying:**
 ```
 Tool: backup_file
 Args: {"file_path": "config.py"}
 Result: {"backup_file": "config.py.backup.20250118_143052"}
 ```
 
-4. **Apply the patch:**
+3. **Apply the patch:**
 ```
 Tool: apply_patch
 Args: {
@@ -287,8 +275,8 @@ All three changes are applied together or none are applied. If any hunk fails, t
 ---
 
 ## Documentation
-## Documentation
 
+- **[DEPRECATION.md](DEPRECATION.md)** - v3.0 migration guide
 - **[SECURITY.md](SECURITY.md)** - Security policy and best practices
 - **[WORKFLOWS.md](WORKFLOWS.md)** - Error recovery workflow patterns
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contributing guidelines
@@ -364,4 +352,4 @@ This server implements the [Model Context Protocol (MCP)](https://modelcontextpr
 
 ---
 
-**Last Updated**: 2025-10-19 | **Phase**: 5 of 5 (Beta) | **Tools**: 7/7
+**Last Updated**: 2025-01-19 | **Phase**: 5 of 5 (Beta) | **Tools**: 4 core tools | **Version**: 3.0.0
