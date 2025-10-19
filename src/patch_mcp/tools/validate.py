@@ -13,7 +13,7 @@ import difflib
 from pathlib import Path
 from typing import Any, Dict
 
-from ..utils import validate_file_safety
+from ..utils import sanitize_error_message, validate_file_safety
 
 
 def validate_patch(file_path: str, patch: str) -> Dict[str, Any]:
@@ -333,6 +333,8 @@ def _can_apply_patch(file_lines: list[str], hunks: list[Dict[str, Any]]) -> Dict
                         f"Context mismatch at line {hunk['source_start']}: "
                         f"expected '{clean_removed}' but found '{closest[0]}'"
                     )
+                    # Sanitize to prevent content leakage
+                    reason = sanitize_error_message(reason)
                     return {
                         "can_apply": False,
                         "reason": reason,
@@ -342,6 +344,8 @@ def _can_apply_patch(file_lines: list[str], hunks: list[Dict[str, Any]]) -> Dict
                         f"Context mismatch: line '{clean_removed}' "
                         "not found in file at expected position"
                     )
+                    # Sanitize to prevent content leakage
+                    reason = sanitize_error_message(reason)
                     return {
                         "can_apply": False,
                         "reason": reason,

@@ -8,7 +8,7 @@ import difflib
 from pathlib import Path
 from typing import Any, Dict
 
-from ..utils import validate_file_safety
+from ..utils import detect_sensitive_content, validate_file_safety
 
 
 def generate_patch(
@@ -138,13 +138,16 @@ def generate_patch(
         elif line.startswith("-") and not line.startswith("---"):
             lines_removed += 1
 
+    # Scan patch for sensitive content
+    security_scan = detect_sensitive_content(patch)
+
     # Return result
     if hunks == 0:
         message = "Files are identical - no patch generated"
     else:
         message = "Generated patch from file comparison"
 
-    return {
+    result = {
         "success": True,
         "original_file": str(original_path),
         "modified_file": str(modified_path),
@@ -156,3 +159,13 @@ def generate_patch(
         },
         "message": message,
     }
+
+    # Add security warning if sensitive content detected
+    if security_scan["has_sensitive"]:
+        result["security_warning"] = {
+            "has_sensitive_content": True,
+            "findings": security_scan["findings"],
+            "recommendation": security_scan["recommendation"],
+        }
+
+    return result

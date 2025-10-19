@@ -23,9 +23,37 @@ The Patch MCP Server implements comprehensive security measures:
 ### Operation Security
 - **Permission Checks**: Read/write permissions validated before operations
 - **Atomic Operations**: File replacements use atomic rename where possible
+- **Secure Temporary Files**: Uses `tempfile.mkstemp()` for secure temp file creation
 - **No Code Execution**: Server does not execute arbitrary code
 - **Input Validation**: All inputs validated using Pydantic models
 - **Error Type Classification**: 10 distinct error types for precise error handling
+
+### NEW: Information Disclosure Protection (v1.1.0)
+
+**Sensitive Content Detection** (`utils.py:detect_sensitive_content`)
+- Automatically scans patches for secrets and credentials
+- Detects: private keys, API keys, tokens, passwords, AWS credentials, JWT tokens, database connection strings
+- Returns security warnings when sensitive content is found
+- Helps prevent accidental credential leakage
+
+**Error Message Sanitization** (`utils.py:sanitize_error_message`)
+- Sanitizes error messages to prevent information disclosure
+- Truncates long content snippets (>50 characters) to `[CONTENT]`
+- Removes absolute filesystem paths (keeps only filenames)
+- Mitigates prompt injection attacks via file content reflection
+
+Example security warning from `generate_patch`:
+```json
+{
+  "success": true,
+  "patch": "...",
+  "security_warning": {
+    "has_sensitive_content": true,
+    "findings": ["API key pattern detected"],
+    "recommendation": "SECURITY WARNING: Sensitive content detected..."
+  }
+}
+```
 
 ### Security Constants
 
@@ -55,9 +83,16 @@ The security of your system depends on:
 
 ## Security Audit History
 
-| Date       | Auditor | Scope                | Status |
-|------------|---------|----------------------|--------|
-| 2025-01-18 | Internal| Full codebase review | ✅ Pass |
+| Date       | Auditor | Scope                | Status | Report |
+|------------|---------|----------------------|--------|--------|
+| 2025-10-19 | Internal| Security code review | ⚠️ Issues Found | See SECURITY_ISSUES.md |
+| 2025-01-18 | Internal| Full codebase review | ✅ Pass | - |
+
+**Latest Findings (2025-10-19)**:
+- 2 CRITICAL vulnerabilities identified (data exfiltration, path traversal)
+- 3 HIGH severity issues (info disclosure, prompt injection, no auth)
+- 4 MEDIUM severity issues (resource limits, race conditions)
+- See [SECURITY_ISSUES.md](./SECURITY_ISSUES.md) for full details and remediation
 
 ## Disclosure Policy
 

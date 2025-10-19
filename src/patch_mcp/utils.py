@@ -231,3 +231,138 @@ def atomic_file_replace(source: Path, target: Path) -> None:
     else:
         # Unix: atomic rename
         source.rename(target)
+
+
+def sanitize_error_message(message: str, max_content_length: int = 50) -> str:
+    """Sanitize error messages to prevent information disclosure.
+
+    Removes or truncates potentially sensitive content from error messages
+    to mitigate prompt injection and information disclosure risks.
+
+    Security improvements:
+        1. Truncates long quoted strings that might contain file content
+        2. Removes filesystem paths while preserving general location info
+        3. Limits length of displayed content snippets
+
+    Args:
+        message: The error message to sanitize
+        max_content_length: Maximum length for content snippets (default: 50)
+
+    Returns:
+        Sanitized error message safe for display to LLM
+
+    Example:
+        >>> msg = "Context mismatch: expected 'secret_api_key=abc123...' but found 'secret_api_key=xyz789...'"
+        >>> sanitize_error_message(msg)
+        "Context mismatch: expected '[CONTENT]' but found '[CONTENT]'"
+    """
+    # Pattern 1: Replace long quoted strings with [CONTENT]
+    import re
+
+    # Find quoted strings longer than max_content_length
+    def replace_long_quotes(match):
+        content = match.group(1)
+        if len(content) > max_content_length:
+            return "'[CONTENT]'"
+        return match.group(0)
+
+    sanitized = re.sub(r"'([^']*)'", replace_long_quotes, message)
+
+    # Pattern 2: Remove absolute paths but keep filename
+    # Replace /full/path/to/file.txt with file.txt
+    sanitized = re.sub(r'/(?:[^/\s]+/)+([^/\s]+)', r'\1', sanitized)
+    # Also handle Windows paths
+    sanitized = re.sub(r'[A-Za-z]:\\(?:[^\\:\s]+\\)+([^\\:\s]+)', r'\1', sanitized)
+
+    return sanitized
+
+
+def detect_sensitive_content(content: str) -> Dict[str, Any]:
+    """Detect potentially sensitive content in file or patch content.
+
+    Scans content for patterns that may indicate secrets, credentials, or
+    other sensitive data that should not be exposed to LLMs.
+
+    Detected patterns:
+        1. Private keys (RSA, SSH, PGP, etc.)
+        2. API keys and tokens (various formats)
+        3. Passwords in configuration
+        4. AWS credentials
+        5. JWT tokens
+        6. Database connection strings
+        7. Generic secrets patterns
+
+    Args:
+        content: The content to scan for sensitive data
+
+    Returns:
+        Dict with:
+            - has_sensitive: bool - True if sensitive content detected
+            - findings: List[str] - List of detected sensitive patterns
+            - recommendation: str - Security guidance
+
+    Example:
+        >>> result = detect_sensitive_content(patch_content)
+        >>> if result["has_sensitive"]:
+        ...     print(f"WARNING: {result['recommendation']}")
+    """
+    import re
+
+    findings = []
+
+    # Pattern 1: Private keys
+    if re.search(
+        r"-----BEGIN (RSA|DSA|EC|OPENSSH|PGP) PRIVATE KEY-----", content, re.IGNORECASE
+    ):
+        findings.append("Private cryptographic key detected")
+
+    # Pattern 2: API keys and tokens (common formats)
+    api_key_patterns = [
+        (r"api[_-]?key\s*[:=]\s*['\"]?[a-zA-Z0-9_\-]{20,}['\"]?", "API key"),
+        (r"token\s*[:=]\s*['\"]?[a-zA-Z0-9_\-]{20,}['\"]?", "Token"),
+        (r"secret\s*[:=]\s*['\"]?[a-zA-Z0-9_\-]{20,}['\"]?", "Secret"),
+        (r"password\s*[:=]\s*['\"]?[^\s'\"]{8,}['\"]?", "Password"),
+    ]
+
+    for pattern, name in api_key_patterns:
+        if re.search(pattern, content, re.IGNORECASE):
+            findings.append(f"{name} pattern detected")
+
+    # Pattern 3: AWS credentials
+    if re.search(r"AKIA[0-9A-Z]{16}", content):
+        findings.append("AWS access key ID detected")
+
+    # Pattern 4: JWT tokens
+    if re.search(
+        r"eyJ[a-zA-Z0-9_-]*\.eyJ[a-zA-Z0-9_-]*\.[a-zA-Z0-9_-]*", content
+    ):
+        findings.append("JWT token detected")
+
+    # Pattern 5: Database connection strings
+    db_patterns = [
+        r"(postgres|mysql|mongodb)://[^\s]+:[^\s]+@",
+        r"Server=.*;Database=.*;User.*=.*;Password=.*",
+    ]
+
+    for pattern in db_patterns:
+        if re.search(pattern, content, re.IGNORECASE):
+            findings.append("Database connection string detected")
+            break
+
+    # Prepare result
+    has_sensitive = len(findings) > 0
+
+    if has_sensitive:
+        recommendation = (
+            "SECURITY WARNING: Sensitive content detected in patch. "
+            "Review carefully before sharing. Consider using environment "
+            "variables or secret management instead of hardcoded credentials."
+        )
+    else:
+        recommendation = "No obvious sensitive patterns detected"
+
+    return {
+        "has_sensitive": has_sensitive,
+        "findings": findings,
+        "recommendation": recommendation,
+    }
