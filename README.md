@@ -259,15 +259,9 @@ All three changes are applied together or none are applied. If any hunk fails, t
 
 ## Documentation
 
-- **[API.md](docs/API.md)** - Complete API reference for all tools
 - **[SECURITY.md](SECURITY.md)** - Security policy and best practices
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contributing guidelines
 - **[CHANGELOG.md](CHANGELOG.md)** - Version history and changes
-
-### Design Documentation
-
-- **[Project Design](docs/project_design.md)** - Complete design specification
-- **[Implementation Guide](docs/AI_IMPLEMENTATION_GUIDE.md)** - Implementation details
 
 ---
 
@@ -280,8 +274,6 @@ The server provides 10 distinct error types for precise error handling:
 
 **Security Errors:**
 - `symlink_error`, `binary_file`, `disk_space_error`, `resource_limit`
-
-See [API.md](docs/API.md) for complete error type documentation.
 
 ---
 
