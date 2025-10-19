@@ -270,9 +270,9 @@ def sanitize_error_message(message: str, max_content_length: int = 50) -> str:
 
     # Pattern 2: Remove absolute paths but keep filename
     # Replace /full/path/to/file.txt with file.txt
-    sanitized = re.sub(r'/(?:[^/\s]+/)+([^/\s]+)', r'\1', sanitized)
+    sanitized = re.sub(r"/(?:[^/\s]+/)+([^/\s]+)", r"\1", sanitized)
     # Also handle Windows paths
-    sanitized = re.sub(r'[A-Za-z]:\\(?:[^\\:\s]+\\)+([^\\:\s]+)', r'\1', sanitized)
+    sanitized = re.sub(r"[A-Za-z]:\\(?:[^\\:\s]+\\)+([^\\:\s]+)", r"\1", sanitized)
 
     return sanitized
 
@@ -311,9 +311,7 @@ def detect_sensitive_content(content: str) -> Dict[str, Any]:
     findings = []
 
     # Pattern 1: Private keys
-    if re.search(
-        r"-----BEGIN (RSA|DSA|EC|OPENSSH|PGP) PRIVATE KEY-----", content, re.IGNORECASE
-    ):
+    if re.search(r"-----BEGIN (RSA|DSA|EC|OPENSSH|PGP) PRIVATE KEY-----", content, re.IGNORECASE):
         findings.append("Private cryptographic key detected")
 
     # Pattern 2: API keys and tokens (common formats)
@@ -333,9 +331,7 @@ def detect_sensitive_content(content: str) -> Dict[str, Any]:
         findings.append("AWS access key ID detected")
 
     # Pattern 4: JWT tokens
-    if re.search(
-        r"eyJ[a-zA-Z0-9_-]*\.eyJ[a-zA-Z0-9_-]*\.[a-zA-Z0-9_-]*", content
-    ):
+    if re.search(r"eyJ[a-zA-Z0-9_-]*\.eyJ[a-zA-Z0-9_-]*\.[a-zA-Z0-9_-]*", content):
         findings.append("JWT token detected")
 
     # Pattern 5: Database connection strings
