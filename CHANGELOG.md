@@ -34,10 +34,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Multi-hunk Patch Support**: Apply multiple changes atomically to different parts of a file
 - **Dry-run Mode**: Test patches without modifying files
-- **Extensive Test Coverage**: 244 tests with 83% overall coverage
+- **Extensive Test Coverage**: 286 tests with 84% overall coverage
 - **Comprehensive Documentation**:
   - Complete README with examples
-  - WORKFLOWS.md documenting error recovery patterns
   - API documentation with clear return value semantics
 
 ### Features
@@ -48,19 +47,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Code quality enforcement (black, ruff)
 
 ### Testing
-- 244 passing tests across all components:
-  - 33 model tests (100% coverage)
+- 286 passing tests across all components:
+  - 33 model tests
   - 40 security tests (88% coverage)
-  - 17 apply tests (87% coverage)
+  - 19 apply tests (87% coverage)
   - 17 validate tests (92% coverage)
   - 12 revert tests (91% coverage)
   - 11 generate tests (81% coverage)
   - 14 inspect tests (99% coverage)
-  - 32 backup tests (70% coverage)
+  - 39 backup tests (70% coverage)
   - 20 server tests (86% coverage)
   - 13 API semantics tests
-  - 21 workflow integration tests
+  - 31 workflow integration tests
   - 14 example workflow tests
+  - 23 error scenario tests
 
 ### Documentation
 - README.md with quick start, examples, and complete feature documentation
@@ -90,9 +90,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Release Notes
 
-### Version 2.0.0 (Production Ready)
+### Version 2.0.0 (Stable Beta)
 
-This is the first production-ready release of the Patch MCP Server. All 5 development phases are complete:
+This is the first stable beta release of the Patch MCP Server. All 5 development phases are complete:
 
 - ✅ Phase 1: Foundation (Data models, security utilities, test infrastructure)
 - ✅ Phase 2: Core Tools (apply, validate, revert, generate, inspect)
@@ -100,7 +100,7 @@ This is the first production-ready release of the Patch MCP Server. All 5 develo
 - ✅ Phase 4: MCP Server (Server implementation, tool registration)
 - ✅ Phase 5: Error Recovery Patterns (4 workflow patterns with comprehensive tests)
 
-The server is ready for use with MCP clients like Claude Desktop and provides a complete, production-grade solution for applying unified diff patches with comprehensive security and error recovery.
+The server is ready for testing with MCP clients like Claude Desktop and provides a feature-complete solution for applying unified diff patches with comprehensive security and error recovery.
 
 ### Known Limitations
 

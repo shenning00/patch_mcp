@@ -202,10 +202,10 @@ We welcome feature requests! When suggesting a new feature:
 ### Documentation
 
 - Update README.md for user-facing changes
-- Update WORKFLOWS.md for new workflow patterns
+- Update WORKFLOWS.md for new error recovery workflow patterns
+- LLM usage guidelines are in `.mcp_instructions/patch_mcp.md`
 - Add docstrings to all public APIs
 - Include code examples where helpful
-
 ### Commit Messages
 
 Follow conventional commit format:

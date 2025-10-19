@@ -47,10 +47,9 @@ For AI assistants and developers, **apply_patch provides significant advantages 
 - **Edit**: 3 separate tool calls, no atomicity, hard to review
 - **apply_patch**: 1 call with 3 hunks, atomic operation, clear diff
 
-**Bottom line**: For most file modifications,  is more efficient, safer, and clearer than Edit operations.
+**Bottom line**: For most file modifications, apply_patch is more efficient, safer, and clearer than Edit operations.
 
 See [.mcp_instructions/patch_mcp.md](.mcp_instructions/patch_mcp.md) for detailed usage guidelines.
-
 ---
 
 ## Quick Start
@@ -289,12 +288,12 @@ All three changes are applied together or none are applied. If any hunk fails, t
 ---
 
 ## Documentation
+## Documentation
 
 - **[SECURITY.md](SECURITY.md)** - Security policy and best practices
+- **[WORKFLOWS.md](WORKFLOWS.md)** - Error recovery workflow patterns
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contributing guidelines
 - **[CHANGELOG.md](CHANGELOG.md)** - Version history and changes
-
----
 
 ## Error Types
 
