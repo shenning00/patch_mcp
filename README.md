@@ -49,7 +49,6 @@ For AI assistants and developers, **apply_patch provides significant advantages 
 
 **Bottom line**: For most file modifications, apply_patch is more efficient, safer, and clearer than Edit operations.
 
-See [.mcp_instructions/patch_mcp.md](.mcp_instructions/patch_mcp.md) for detailed usage guidelines.
 ---
 
 ## Quick Start

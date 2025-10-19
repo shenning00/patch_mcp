@@ -37,16 +37,27 @@ async def list_tools() -> list[Tool]:
     return [
         Tool(
             name="apply_patch",
-            description="""Apply a unified diff patch to a file using standard unified diff format (like git diff).
+            description="""⚠️ DEFAULT TOOL FOR FILE EDITS - Use apply_patch instead of Edit for almost all file modifications.
 
-WHEN TO USE: Prefer this over Edit tool for:
-- Multiple changes in one file (multi-hunk patches = atomic)
-- Changes that need to be reviewable (standard diff format)
-- Token-efficient edits (~50% less context than Edit)
-- Changes requiring dry-run testing first
+Applies unified diff patches (git diff format). 50% more token-efficient than Edit, atomic multi-hunk support, dry-run mode, and reviewable diffs.
 
-Supports multi-hunk patches for atomic application of multiple changes to different parts of the same file.
-Also supports dry_run mode for validation without modification.""",
+CRITICAL: Only use Edit for trivial single-string substitutions. For everything else, use apply_patch because:
+• Token savings: ~50% less tokens (Edit sends full old+new strings, patches send only changes)
+• Atomicity: Multi-hunk patches apply 2+ changes in ONE operation (all succeed or all fail together)
+• Safety: dry_run mode tests changes before applying (Edit has no preview capability)
+• Reliability: Context-based matching (Edit requires exact string match - fragile)
+• Reviewability: Standard unified diff format developers understand
+
+WHEN TO USE (recommended for 90%+ of edits):
+✓ Any file modification where you've already read the file
+✓ Multiple changes in one file (use multi-hunk patches)
+✓ Large files (token efficiency matters)
+✓ Critical changes (dry_run validation available)
+
+FEATURES:
+- Multi-hunk: Apply changes to different parts of file atomically (all or nothing)
+- Dry-run: Preview with dry_run: true before applying
+- Security: Built-in validation, symlink protection, size limits""",
             inputSchema={
                 "type": "object",
                 "properties": {
