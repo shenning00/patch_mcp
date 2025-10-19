@@ -6,6 +6,7 @@ with comprehensive security checks and optional dry-run mode.
 CRITICAL: Supports dry_run parameter for testing without modification.
 """
 
+import os
 import tempfile
 from pathlib import Path
 from typing import Any, Dict
@@ -120,10 +121,14 @@ def apply_patch(file_path: str, patch: str, dry_run: bool = False) -> Dict[str, 
         # Parse patch and apply changes
         modified_lines = _apply_patch_to_lines(original_lines, patch)
 
-        # Write to temporary file first
-        temp_file = Path(tempfile.mktemp(dir=path.parent, prefix=".patch_tmp_"))
+        # Write to temporary file first (using secure temp file creation)
+        temp_fd, temp_path_str = tempfile.mkstemp(
+            dir=path.parent, prefix=".patch_tmp_", suffix=".tmp", text=True
+        )
+        temp_file = Path(temp_path_str)
         try:
-            with open(temp_file, "w", encoding="utf-8") as f:
+            # Write to the temp file using the file descriptor
+            with os.fdopen(temp_fd, "w", encoding="utf-8") as f:
                 f.writelines(modified_lines)
 
             # Atomically replace original file
