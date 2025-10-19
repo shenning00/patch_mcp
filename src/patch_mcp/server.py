@@ -18,7 +18,7 @@ import json
 from typing import Any
 
 from mcp.server import Server
-from mcp.types import TextContent, Tool
+from mcp.types import Resource, TextContent, Tool
 
 # Import all tool implementations
 from .tools import apply, backup, generate, inspect, revert, validate
@@ -37,7 +37,16 @@ async def list_tools() -> list[Tool]:
     return [
         Tool(
             name="apply_patch",
-            description="Apply a unified diff patch to a file. Supports multi-hunk patches for atomic application of multiple changes to different parts of the same file. Also supports dry_run mode.",
+            description="""Apply a unified diff patch to a file using standard unified diff format (like git diff).
+
+WHEN TO USE: Prefer this over Edit tool for:
+- Multiple changes in one file (multi-hunk patches = atomic)
+- Changes that need to be reviewable (standard diff format)
+- Token-efficient edits (~50% less context than Edit)
+- Changes requiring dry-run testing first
+
+Supports multi-hunk patches for atomic application of multiple changes to different parts of the same file.
+Also supports dry_run mode for validation without modification.""",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -170,6 +179,59 @@ async def list_tools() -> list[Tool]:
             },
         ),
     ]
+
+
+@server.list_resources()  # type: ignore[misc,no-untyped-call]
+async def list_resources() -> list[Resource]:
+    """List available documentation resources.
+
+    Returns:
+        List of Resource objects providing usage guidance
+    """
+    return [
+        Resource(
+            uri="patch://guide/when-to-use",  # type: ignore[arg-type]
+            name="When to Use Patch Tools vs Edit",
+            description="Decision guide for choosing between apply_patch and Edit tool",
+            mimeType="text/markdown",
+        )
+    ]
+
+
+@server.read_resource()  # type: ignore[misc,no-untyped-call]
+async def read_resource(uri: str) -> str:
+    """Read a documentation resource.
+
+    Args:
+        uri: Resource URI to read
+
+    Returns:
+        Resource content as string
+    """
+    if uri == "patch://guide/when-to-use":
+        return """# When to Use apply_patch vs Edit
+
+## Use apply_patch When:
+✅ Making multiple changes to one file (atomic multi-hunk)
+✅ Changes should be reviewable (standard diff format)
+✅ Need to test first (dry_run mode)
+✅ Want token efficiency (~50% less than Edit)
+
+## Use Edit When:
+- Single simple substitution
+- Don't have file in context yet
+- Quick one-line changes
+
+## Example: Multiple Changes
+Instead of 3 Edit calls:
+
+❌ 3 separate operations, no atomicity, partial updates possible
+
+Use 1 apply_patch with 3 hunks:
+
+✅ 1 atomic operation, clear diff view, token efficient
+"""
+    raise ValueError(f"Unknown resource URI: {uri}")
 
 
 @server.call_tool()  # type: ignore[misc]

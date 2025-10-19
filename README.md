@@ -8,7 +8,7 @@
 
 A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that enables AI assistants to safely apply unified diff patches to files with comprehensive security validation.
 
-**Version**: 2.0.0 | **Status**: Production Ready | **Tools**: 7 | **Test Coverage**: 84% (286 tests)
+**Version**: 2.0.0 | **Status**: Beta | **Tools**: 7 | **Test Coverage**: 84% (286 tests)
 
 ---
 
@@ -23,6 +23,33 @@ Enable your AI assistant to:
 - ✅ **Test changes** with dry-run mode before committing
 
 All with **built-in security** (no symlinks, binary files, or directory traversal) and **automatic rollback** on failures.
+
+---
+
+## Why Use Patch Tools Instead of Direct Editing?
+
+For AI assistants and developers, **apply_patch provides significant advantages over traditional Edit operations**:
+
+| Feature | apply_patch | Edit Tool |
+|---------|-------------|-----------|
+| **Format** | Standard unified diff (like git diff) | Custom old/new strings |
+| **Multiple changes** | ✅ Multi-hunk (atomic) | ❌ Separate calls (no atomicity) |
+| **Change visibility** | ✅ Clear diff view | ❌ Hard to spot differences |
+| **Token efficiency** | ✅ ~50% less tokens | ❌ Full old+new strings required |
+| **Testing** | ✅ Dry-run mode available | ❌ No preview capability |
+| **Atomicity** | ✅ All changes succeed/fail together | ❌ Partial updates possible |
+| **Reviewability** | ✅ Standard format developers know | ❌ Custom format |
+
+### Real-World Example
+
+**Task**: Update 3 config values in one file
+
+- **Edit**: 3 separate tool calls, no atomicity, hard to review
+- **apply_patch**: 1 call with 3 hunks, atomic operation, clear diff
+
+**Bottom line**: For most file modifications,  is more efficient, safer, and clearer than Edit operations.
+
+See [.mcp_instructions/patch_mcp.md](.mcp_instructions/patch_mcp.md) for detailed usage guidelines.
 
 ---
 
@@ -339,4 +366,4 @@ This server implements the [Model Context Protocol (MCP)](https://modelcontextpr
 
 ---
 
-**Last Updated**: 2025-10-19 | **Phase**: 5 of 5 (Production Ready) | **Tools**: 7/7
+**Last Updated**: 2025-10-19 | **Phase**: 5 of 5 (Beta) | **Tools**: 7/7
