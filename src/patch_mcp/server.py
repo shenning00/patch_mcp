@@ -184,6 +184,7 @@ COMPARISON:
     ]
 
 
+@server.list_resources()  # type: ignore[misc,no-untyped-call]
 async def list_resources() -> list[Resource]:
     """List available documentation resources.
 
@@ -275,6 +276,7 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
         result = update.update_content(
             arguments["file_path"],
             arguments["original_content"],
+            arguments["new_content"],
             arguments.get("dry_run", False),
         )
     else:

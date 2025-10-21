@@ -129,6 +129,22 @@ class TestToolSchemas:
         # Check force has default
         assert schema["properties"]["force"]["default"] is False
 
+    @pytest.mark.asyncio
+    async def test_update_content_schema(self):
+        """update_content has correct schema."""
+        tools = await list_tools()
+        update_tool = next(t for t in tools if t.name == "update_content")
+
+        schema = update_tool.inputSchema
+        assert "file_path" in schema["properties"]
+        assert "original_content" in schema["properties"]
+        assert "new_content" in schema["properties"]
+        assert "dry_run" in schema["properties"]
+        assert set(schema["required"]) == {"file_path", "original_content", "new_content"}
+
+        # Check dry_run has default
+        assert schema["properties"]["dry_run"]["default"] is False
+
 
 class TestToolRouting:
     """Test tool routing and execution."""
@@ -262,3 +278,132 @@ class TestToolIntegration:
 
         # Verify content restored
         assert test_file.read_text() == original_content
+
+    @pytest.mark.asyncio
+    async def test_update_content_routing(self, tmp_path):
+        """update_content routes correctly and includes all required parameters."""
+        test_file = tmp_path / "update_test.txt"
+        original = "line1\nline2\n"
+        new = "line1\nline2_modified\n"
+        test_file.write_text(original)
+
+        # Test that all parameters are passed correctly
+        result = await call_tool(
+            "update_content",
+            {
+                "file_path": str(test_file),
+                "original_content": original,
+                "new_content": new,
+                "dry_run": False,
+            },
+        )
+
+        parsed = json.loads(result[0].text)
+        assert parsed["success"] is True
+        assert parsed["applied"] is True
+        assert "diff" in parsed
+        assert "changes" in parsed
+
+        # Verify file was actually updated
+        assert test_file.read_text() == new
+
+    @pytest.mark.asyncio
+    async def test_update_content_dry_run(self, tmp_path):
+        """update_content dry_run parameter works correctly."""
+        test_file = tmp_path / "update_dry_run_test.txt"
+        original = "original\n"
+        new = "modified\n"
+        test_file.write_text(original)
+
+        # Test dry run
+        result = await call_tool(
+            "update_content",
+            {
+                "file_path": str(test_file),
+                "original_content": original,
+                "new_content": new,
+                "dry_run": True,
+            },
+        )
+
+        parsed = json.loads(result[0].text)
+        assert parsed["success"] is True
+        assert parsed["applied"] is False  # Should not apply in dry run
+        assert "diff" in parsed
+
+        # Verify file was NOT modified
+        assert test_file.read_text() == original
+
+    @pytest.mark.asyncio
+    async def test_update_content_content_mismatch(self, tmp_path):
+        """update_content detects when file content has changed."""
+        test_file = tmp_path / "mismatch_test.txt"
+        test_file.write_text("actual content\n")
+
+        # Try to update with wrong original content
+        result = await call_tool(
+            "update_content",
+            {
+                "file_path": str(test_file),
+                "original_content": "expected content\n",
+                "new_content": "new content\n",
+            },
+        )
+
+        parsed = json.loads(result[0].text)
+        assert parsed["success"] is False
+        assert parsed["error_type"] == "content_mismatch"
+        assert "diff_from_expected" in parsed
+
+    @pytest.mark.asyncio
+    async def test_all_tools_execute_without_error(self, tmp_path):
+        """Ensure all tools can be called through the MCP interface."""
+        # This test ensures we catch issues like missing parameters in call_tool()
+
+        # Test apply_patch
+        test_file = tmp_path / "test_all.txt"
+        test_file.write_text("line1\n")
+        patch = """--- test_all.txt
++++ test_all.txt
+@@ -1 +1 @@
+-line1
++line1_modified
+"""
+        result = await call_tool(
+            "apply_patch",
+            {"file_path": str(test_file), "patch": patch, "dry_run": True},
+        )
+        assert json.loads(result[0].text)["success"] is True
+
+        # Test validate_patch
+        result = await call_tool(
+            "validate_patch", {"file_path": str(test_file), "patch": patch}
+        )
+        parsed = json.loads(result[0].text)
+        assert "success" in parsed
+
+        # Test backup_file
+        result = await call_tool("backup_file", {"file_path": str(test_file)})
+        backup_data = json.loads(result[0].text)
+        assert backup_data["success"] is True
+
+        # Test restore_backup
+        result = await call_tool(
+            "restore_backup", {"backup_file": backup_data["backup_file"]}
+        )
+        assert json.loads(result[0].text)["success"] is True
+
+        # Test update_content (the previously broken tool)
+        original = test_file.read_text()
+        new = "new content\n"
+        result = await call_tool(
+            "update_content",
+            {
+                "file_path": str(test_file),
+                "original_content": original,
+                "new_content": new,
+            },
+        )
+        parsed = json.loads(result[0].text)
+        assert parsed["success"] is True
+        assert parsed["applied"] is True
